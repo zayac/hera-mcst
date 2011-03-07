@@ -4,7 +4,7 @@
 #include "ELFWriter.h"
 #include "ELFReader.h"
 #include <cstring>
-
+// nre vommrn
 using namespace std;
 
 /*
