@@ -54,89 +54,62 @@ int Instruction::setAddr(string str)
     return -1;
 }
 
-int Instruction::set( string source, bool setArgs)
+int Instruction::set( string source)
 {
     this->instr_word = 0;
     this->args.clear();
-    string token;
-    size_t p0 = 0, p1 = string::npos;
-    source = erase(source, '\t');          // avoid all tabulations
-    
-    /* This is a label check.
-     * A character that can be met only in labels is ':'
-     * We are to transform label name into relative address
-     * and to store for future needs.
-     */
-    p1 = source.find_first_of(":", p0);
 
+	size_t p0 = 0, p1 = string::npos;
+    source = erase(source, '\t');
+    p1 = source.find_first_of(":", p0);
     if (p1 != string::npos)
     {
         addr_name.push_back(source.substr(p0, p1 - p0));
-        //cout << source.substr(p0, p1-p0) << endl;
         addr_value.push_back( this->cmd_counter);
         return 0;
     }
     else
     {
-        /*
-         * This is a comment check.
-         */
         p0 = 0;
-        size_t p2 = source.find_first_of("#", p0);
-        p1 = source.size();
-        source = trim(source.substr(0, p2));
-
-        /* 
-         * Find an operation name, e.g MOV, SETLO, etc.
-         */
         p1 = source.find_first_of(" ", p0);
         if (p1 != p0)
         {
-            token = source.substr(p0, p1 - p0);
+            string token = source.substr(p0, p1 - p0);
             this->instr_string = trim(toUpper(token));
         }
+        size_t p2 = source.find_first_of(";", p0);
+        source = trim(source.substr(p1+1, p2-p1-1));
 
-        /*
-         * Process instruction arguments
-         */
-        if (setArgs)
+        p0 = 0;
+        while(p0 != string::npos)
         {
-            p0 = source.find_first_of(" ", p0);
-            while(p0 != string::npos)
+            p1 = source.find_first_of(",", p0);
+            if(p1 != p0)
             {
-                p1 = source.find_first_of(",", p0);
-                if(p1 != p0)
-                {
-                    token = source.substr(p0, p1 - p0);
-                    if (setAddr(token) == -1)
-                        this->args.push_back(strToInt(trim(token)));
-                    else
-                        this->args.push_back(setAddr(token));
-                }
-                p0 = source.find_first_not_of(",", p1);
+                string token = source.substr(p0, p1 - p0);
+                if (setAddr(token) == -1)
+                    this->args.push_back(strToInt(trim(token)));
+                else
+                    this->args.push_back(setAddr(token));
             }
+            p0 = source.find_first_not_of(",", p1);
         }
         return 1;
     }
 }
 
-void Instruction::process (string str, unsigned short int* instrs, bool setArgs)
+void Instruction::process (string str, unsigned short int* instrs)
 {
-    if (this->set(str, setArgs))
+    if (this->set(str))
     {
         if( this->encode(instrs))
         {
             instrs[this->getCmdCounter()] = this->getInstrWord();
-            cout << cmd_counter << ") " << str << " -> " << ( unsigned short int) instr_word << endl;
             this->incCmdCounter();
         }
     }
 }
 
-/*
- * Switch can't be used for strings. That's why we use macros here.
- * May be not the best solution
- */
 int Instruction::encode(unsigned short int* instrs)
 {
     // SETLO and SETHI
@@ -189,7 +162,7 @@ int Instruction::encode(unsigned short int* instrs)
 		setValueByShift( this->args[0], 8);
 		setValueByShift( this->args[1], 4);
 		setValueByShift( this->args[2], 0);
-                return 1;
+        return 1;
 	}
 	else if_cmd("MULT")
 	{
@@ -198,7 +171,7 @@ int Instruction::encode(unsigned short int* instrs)
 		setValueByShift( this->args[0], 8);
 		setValueByShift( this->args[1], 4);
 		setValueByShift( this->args[2], 0);
-                return 1;
+        return 1;
 	}
 	else if_cmd("XOR")
 	{
@@ -207,7 +180,7 @@ int Instruction::encode(unsigned short int* instrs)
 		setValueByShift( this->args[0], 8);
 		setValueByShift( this->args[1], 4);
 		setValueByShift( this->args[2], 0);
-                return 1;
+        return 1;
 	}
 	// Shifts
 	else if_cmd("LSL")
@@ -216,7 +189,7 @@ int Instruction::encode(unsigned short int* instrs)
 		setValueByShift( this->args[0], 8);
 		setValueByShift( 0x0, 4);
 		setValueByShift( this->args[1], 0);
-                return 1;
+        return 1;
 	}
 	else if_cmd("LSR")
 	{
@@ -224,7 +197,7 @@ int Instruction::encode(unsigned short int* instrs)
 		setValueByShift( this->args[0], 8);
 		setValueByShift( 0x1, 4);
 		setValueByShift( this->args[1], 0);
-                return 1;
+        return 1;
 	}
 	else if_cmd("LSL8")
 	{
@@ -232,7 +205,7 @@ int Instruction::encode(unsigned short int* instrs)
 		setValueByShift( this->args[0], 8);
 		setValueByShift( 0x2, 4);
 		setValueByShift( this->args[1], 0);
-                return 1;
+        return 1;
 	}
 	else if_cmd("LSR8")
 	{
@@ -240,7 +213,7 @@ int Instruction::encode(unsigned short int* instrs)
 		setValueByShift( this->args[0], 8);
 		setValueByShift( 0x3, 4);
 		setValueByShift( this->args[1], 0);
-                return 1;
+        return 1;
 	}
 	else if_cmd("ASL")
 	{
@@ -248,7 +221,7 @@ int Instruction::encode(unsigned short int* instrs)
 		setValueByShift( this->args[0], 8);
 		setValueByShift( 0x4, 4);
 		setValueByShift( this->args[1], 0);
-                return 1;
+        return 1;
 	}
 	else if_cmd("ASR")
 	{
@@ -256,7 +229,7 @@ int Instruction::encode(unsigned short int* instrs)
 		setValueByShift( this->args[0], 8);
 		setValueByShift( 0x5, 4);
 		setValueByShift( this->args[1], 0);
-                return 1;
+        return 1;
 	}
 	// Set/Clear flags
     else if_cmd("SETF")
@@ -266,7 +239,7 @@ int Instruction::encode(unsigned short int* instrs)
 		setValueByShift( (0x10 & this->args[0]) >> 4, 8);
 		setValueByShift( 0xF & this->args[0], 0);
 		setValueByShift( 0x3, 5);
-                return 1;
+        return 1;
 	}
     else if_cmd("CLRF")
 	{
@@ -275,7 +248,7 @@ int Instruction::encode(unsigned short int* instrs)
 		setValueByShift( (0x10 & this->args[0]) >> 4, 8);
 		setValueByShift( 0xF & this->args[0], 0);
 		setValueByShift( 0x3, 5);
-                return 1;
+        return 1;
 	}
 	// Save/restore flags
     else if_cmd("SAVEF")
@@ -284,15 +257,15 @@ int Instruction::encode(unsigned short int* instrs)
 		setValueByShift( 0x7, 4);
 		setValueByShift( 0x0, 3);
 		setValueByShift( this->args[0], 8);
-                return 1;
+        return 1;
 	}
     else if_cmd("RSTRF")
 	{
 		setValueByShift( 0x3, 12);
 		setValueByShift( 0x7, 4);
 		setValueByShift( 0x1, 3);
-                setValueByShift( this->args[0], 8);
-                return 1;
+		setValueByShift( this->args[0], 8);
+        return 1;
     }
 	// Increments
     else if_cmd("INC")
@@ -380,97 +353,97 @@ int Instruction::encode(unsigned short int* instrs)
     else if_cmd("SET")
     {
         char d[256];
-        sprintf(d, "SETLO %%r%i, %i", this->args[0], this->args[1] & 0xff);
-        this->process(d, instrs, false);
-        sprintf(d, "SETHI %%r%i, %i", this->args[0], this->args[1] >> 8);
-        this->process(d, instrs, true);
+        sprintf(d, "SETLO %i %i", this->args[0], this->args[1] & 0xff);
+        this->process(d, instrs);
+        sprintf(d, "SETHI %i %i", this->args[0], this->args[1] >> 8);
+        this->process(d, instrs);
         return 0;
     }
     else if_cmd("CMP")
     {
         char d[256];
         sprintf(d, "SETC");
-        this->process(d, instrs, false);
-        sprintf(d, "SUB %%r0, %%r%i, %%r%i", this->args[0], this->args[1]);
-        this->process(d, instrs, true);
+        this->process(d, instrs);
+        sprintf(d, "SUB r0 %i %i", this->args[0], this->args[1]);
+        this->process(d, instrs);
         return 0;
     }
     else if_cmd("NEG")
     {
         char d[256];
         sprintf(d, "SETC");
-        this->process(d, instrs, false);
-        sprintf(d, "SUB %%r%i, %%r0, %%r%i",this->args[0], this->args[1]);
-        this->process(d, instrs, true);
+        this->process(d, instrs);
+        sprintf(d, "SUB %i r0 %i",this->args[0], this->args[1]);
+        this->process(d, instrs);
         return 0;
     }
     else if_cmd("NEG")
     {
         char d[256];
         sprintf(d, "SETC");
-        this->process(d, instrs, false);
-        sprintf(d, "SUB %%r%i, %%r0, %%r%i",this->args[0], this->args[1]);
-        this->process(d, instrs, true);
+        this->process(d, instrs);
+        sprintf(d, "SUB %i r0 %i",this->args[0], this->args[1]);
+        this->process(d, instrs);
         return 0;
     }
     else if_cmd("NOT")
     {
         char d[256];
-        sprintf(d, "SET %%r13, 65535");
-        this->process(d, instrs, false);
-        sprintf(d, "XOR %%r%i, %%r13, %%r%i",this->args[0], this->args[1]);
-        this->process(d, instrs, true);
+        sprintf(d, "SET r13, 65535");
+        this->process(d, instrs);
+        sprintf(d, "XOR %i r13 %i",this->args[0], this->args[1]);
+        this->process(d, instrs);
         return 0;
     }
     else if_cmd("HALT")
     {
         char d[256];
         sprintf(d, "BRR 0");
-        this->process(d, instrs, false);
+        this->process(d, instrs);
         return 0;
     }
     else if_cmd("NOP")
     {
         char d[256];
         sprintf(d, "BRR 1");
-        this->process(d, instrs, false);
+        this->process(d, instrs);
         return 0;
     }
     else if_cmd("SETC")
     {
         char d[256];
         sprintf(d, "SETF 8");
-        this->process(d, instrs, false);
+        this->process(d, instrs);
         return 0;
     }
     else if_cmd("CLRC")
     {
         char d[256];
         sprintf(d, "CLRF 8");
-        this->process(d, instrs, false);
+        this->process(d, instrs);
         return 0;
     }
     else if_cmd("SETCB")
     {
         char d[256];
         sprintf(d, "SETF 16");
-        this->process(d, instrs, false);
+        this->process(d, instrs);
         return 0;
     }
     else if_cmd("CLCCB")
     {
         char d[256];
         sprintf(d, "CLRF 24");
-        this->process(d, instrs, false);
+        this->process(d, instrs);
         return 0;
     }
     else if_cmd("FLAGS")
     {
         char d[256];
         sprintf(d, "CLRC");
-        this->process(d, instrs, false);
-        sprintf(d, "ADD %%r0, %%r%i, %%r0", this->args[0]);
-        this->process(d, instrs, true);
+        this->process(d, instrs);
+        sprintf(d, "ADD r0, %i, r0", this->args[0]);
+        this->process(d, instrs);
         return 0;
     }
     return 0;

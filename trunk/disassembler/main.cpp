@@ -8,7 +8,7 @@
 #include "SectionHeader.h"
 #include "ELFWriter.h"
 #include "ELFReader.h"
-#include "Processor.h"
+//#include "Processor.h"
 #include "Disasm.h"
 #include <fstream>
 #include <cstring>
@@ -47,14 +47,14 @@ int main(int argc, char** argv)
 
 
             Executor ex(&mem);
-            //Disasm dis (cout, &mem);
+            Disasm dis (cout, &mem);
             Translator cpu(&ex);
             //    cpu.Set_execution (&dis);
-            cpu.Run (1);
+            //cpu.Run (1);
 
-            //ut <<"disasm:\n";
-            //u.Set_execution (&dis);
-            //u.Run (1);
+            cout <<"disasm:\n";
+            cpu.Set_execution (&dis);
+            cpu.Run (1);
             //cpu._exe.dump
         }
     }
