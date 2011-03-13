@@ -53,6 +53,14 @@ int main(int argc, char** argv)
             Instruction parser;                       
             string str;
             
+            while(!ifile.eof())
+            {
+                getline(ifile, str);
+                parser.checkLabel(str.c_str());
+            }
+            ifile.clear();
+            ifile.seekg(0);
+            parser.setCmdCounter(1);
             // Each instruction is read and processed separatly
             while(!ifile.eof())
             {

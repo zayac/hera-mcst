@@ -28,9 +28,13 @@ class Instruction
      * See constructor to see it's initialization.
      */
     vector<string> branches;                
+    
     public:
     Instruction();
 
+
+    // check if a string is a label and cache it
+    void checkLabel(string source);
     // just several getters and setters
     int getInstrWord(){ return instr_word; }
     int getCmdCounter(){ return cmd_counter; }

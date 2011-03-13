@@ -1,7 +1,7 @@
 #### Compiler and tool definitions shared by all build targets #####
 CCC = g++
 CXX = g++
-BASICOPTS = -g
+BASICOPTS = -g -lboost_regex
 CCFLAGS = $(BASICOPTS)
 CXXFLAGS = $(BASICOPTS)
 CCADMIN = 
