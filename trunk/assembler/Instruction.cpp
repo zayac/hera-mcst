@@ -54,6 +54,26 @@ int Instruction::setAddr(string str)
     return -1;
 }
 
+
+void Instruction::checkLabel( string source)
+{
+    /* This is a label check.
+    * A character that can be met only in labels is ':'
+    * We are to transform label name into relative address
+    * and to store for future needs.
+    */
+    size_t p0 = 0;
+    size_t p1 = source.find_first_of(":");
+
+    if (p1 != string::npos)
+    {
+        addr_name.push_back(source.substr(p0, p1 - p0));
+        addr_value.push_back( this->cmd_counter);
+        this->incCmdCounter();
+        //cout << "Label: " << source.substr(p0, p1-p0) << " " << this->cmd_counter << endl;
+    }
+}
+
 int Instruction::set( string source, bool setArgs)
 {
     this->instr_word = 0;
@@ -67,14 +87,19 @@ int Instruction::set( string source, bool setArgs)
      * We are to transform label name into relative address
      * and to store for future needs.
      */
-    p1 = source.find_first_of(":", p0);
+/*     p1 = source.find_first_of(":", p0);
 
     if (p1 != string::npos)
     {
         addr_name.push_back(source.substr(p0, p1 - p0));
-        //cout << source.substr(p0, p1-p0) << endl;
         addr_value.push_back( this->cmd_counter);
+        cout << "Label: " << source.substr(p0, p1-p0) << " " << this->cmd_counter << endl;
         return 0;
+    }*/
+    if ((p1 = source.find_first_of(":", p0)) != string::npos)
+    {
+        cout << source.substr(p0, p1-p0) << ": -> " << this->cmd_counter << endl;
+        return 0;   
     }
     else
     {
@@ -85,7 +110,6 @@ int Instruction::set( string source, bool setArgs)
         size_t p2 = source.find_first_of("#", p0);
         p1 = source.size();
         source = trim(source.substr(0, p2));
-
         /* 
          * Find an operation name, e.g MOV, SETLO, etc.
          */
