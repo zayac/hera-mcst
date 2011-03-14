@@ -1,502 +1,441 @@
-#include <iostream>
-#include <stdio.h>
-#include <string>
 #include "Instruction.h"
-#include <string.h>
-
-#define if_cmd(cmd) if (!strcmp(instr_string.c_str(), cmd))
+#include <boost/regex.hpp>
+#include <boost/lexical_cast.hpp>
+#include <sstream>
+#include <iostream>
 
 using namespace std;
-Instruction::Instruction()
+using namespace boost;
+
+regex Instruction::exprLabel("^([A-Za-z_.])([A-Za-z0-9_.])*:$");
+regex Instruction::exprOperation("([A-Za-z])+");
+regex Instruction::exprArguments("(%r[0-9]{1,2})|([0-9]+)");
+regex Instruction::exprDecimalNumber("[0-9]+");
+regex Instruction::exprRegister("%r[0-9]{1,2}");
+regex Instruction::exprOperSet("^(setlo|sethi) (%r[0-9]{1,2}) *, *((%r[0-9]{1,2})|([0-9]+))", regex_constants::icase);
+regex Instruction::exprOperThreeAddress("^(and|or|add|sub|mult|xor) (%r[0-9]{1,2}) *, *((%r[0-9]{1,2})|([0-9]+)) *, *((%r[0-9]{1,2})|([0-9]+))", regex_constants::icase);
+regex Instruction::exprOperShift("^(lsl|lsr|lsl8|lsr8|asl|asr) (%r[0-9]{1,2}) *, *((%r[0-9]{1,2})|([0-9]+))", regex_constants::icase);
+regex Instruction::exprOperSetClearFlags("^(setf|clrf) (%r[0-9]{1,2})", regex_constants::icase);
+regex Instruction::exprOperSaveRestoreFlags("^(save|rstrf) (%r[0-9]{1,2})", regex_constants::icase);
+regex Instruction::exprOperIncDecFlag("^(inc|dec) (%r[0-9]{1,2}) *, *((%r[0-9]{1,2})|([0-9]+))", regex_constants::icase);
+regex Instruction::exprOperLoadStore("^(load|store) (%r[0-9]{1,2}) *, *((%r[0-9]{1,2})|([0-9]+)) *, *((%r[0-9]{1,2})|([0-9]+))", regex_constants::icase);
+regex Instruction::exprOperBranch("^(brr?|blr?|bger?|bler?|bgr?|buler?|bugr?|bzr?|bnzr?|bcr?|bncr?|bsr?|bnsr?|bvr?|bnvr?) ([A-Za-z_.])([A-Za-z0-9_.])*", regex_constants::icase);
+regex Instruction::exprOperReturn("^(return|rti)", regex_constants::icase);
+regex Instruction::exprOperSwi("^(swi) [0-9]+", regex_constants::icase);
+regex Instruction::exprOperCall("^(call) (%r[0-9]{1,2}) *, *[0-9]+", regex_constants::icase);
+
+// macro instructions
+regex Instruction::exprOperMacroSet("^(set) (%r[0-9]{1,2}) *, *((%r[0-9]{1,2})|([0-9]+))", regex_constants::icase);
+regex Instruction::exprOperMacroCmpNegNot("^(cmp|neg|not) ((%r[0-9]{1,2})|([0-9]+)) *, *((%r[0-9]{1,2})|([0-9]+))", regex_constants::icase);
+regex Instruction::exprOperMacroHaltFlags("^(halt|nop|setc|clrc|setcb|clccb|)", regex_constants::icase);
+
+Instruction::Instruction(string str) : str(str)
 {
-	this->instr_word = 0;
-    this->cmd_counter = 1;
-    string branches[] = { "BR", "BL",  "BGE",  "BLE",  "BG",  "BULE",  "BUG",  "BZ",  "BNZ",  "BC",  "BNC",  "BS",  "BNS",  "BV",  "BNV",
-                         "BRR", "BLR", "BGER", "BLER", "BGR", "BULER", "BUGR", "BZR", "BNZR", "BCR", "BNCR", "BSR", "BNSR", "BVR", "BNVR" };
+	cleanInstruction();
+	for(int i = 0; i < str.length(); i++) str[i] = tolower(str[i]);
+    string branches[] = { "br", "bl",  "bge",  "ble",  "bg",  "bule",  "bug",  "bz",  "bnz",  "bc",  "bnc",  "bs",  "bns",  "bv",  "bnv",
+                         "BRR", "blr", "bger", "bler", "bgr", "buler", "bugr", "bzr", "bnzr", "bcr", "bncr", "bsr", "bnsr", "bvr", "bnvr" };
     this->branches.insert(this->branches.begin(), branches, branches + 30);
 }
+Instruction::Instruction() { str = ""; }
 
-
-string Instruction::trim(string str)
+void Instruction::removeWhiteSpaces()
 {
-
-	string::size_type pos = str.find_last_not_of(' ');
-	if(pos != string::npos)
-	{
-		str.erase(pos + 1);
-		pos = str.find_first_not_of(' ');
-		if(pos != string::npos) str.erase(0, pos);
-	}
-	else str.erase(str.begin(), str.end());
-	return str;
+	istringstream ss(str);
+	string output, tmp;
+	while(ss >> tmp) output += tmp + " ";
+	str = output.substr(0, output.size()-1);
 }
 
-string Instruction::erase(string str, char chr)
+void Instruction::removeComment()
 {
-    string::size_type pos = str.find_first_of(chr);
-    while( pos != string::npos)
-    {
-        str.erase(pos, 1);
-        pos = str.find_first_of(chr);
-    }
-    return str;
+	str = str.substr(0, str.find_first_of("#", 0));
 }
 
-int Instruction::setAddr(string str)
+bool Instruction::isMacroInstruction() const
 {
-    for(unsigned int i = 0; i < addr_name.size(); i++)
+	return 	isMacroSetInstruction() || isMacroCmpNegNot() || isMacroHaltFlags() || isMacroForTwoInstructions() || isMacroForThreeInstructions();
+}
+
+void Instruction::cleanInstruction()
+{
+	removeComment();
+	removeWhiteSpaces();
+}
+
+// Image branch name into it's index in branches vector
+int Instruction::findBranch( string br)
+{
+    for ( unsigned int i = 0; i < this->branches.size(); i++)
     {
-        if(str == addr_name[i])
-        {
-            return addr_value[i];
-        }
+        if (br == this->branches[i])
+            return i;
     }
     return -1;
 }
 
-
-void Instruction::checkLabel( string source)
+optional<string> Instruction::getOperation() const
 {
-    /* This is a label check.
-    * A character that can be met only in labels is ':'
-    * We are to transform label name into relative address
-    * and to store for future needs.
-    */
-    size_t p0 = 0;
-    size_t p1 = source.find_first_of(":");
-
-    if (p1 != string::npos)
-    {
-        addr_name.push_back(source.substr(p0, p1 - p0));
-        addr_value.push_back( this->cmd_counter);
-        this->incCmdCounter();
-        //cout << "Label: " << source.substr(p0, p1-p0) << " " << this->cmd_counter << endl;
-    }
+	match_results<string::const_iterator> what;
+	if(regex_search(str, what, exprOperation))
+	{
+		return string( what[0].first, what[0].second );
+	}
+	else
+		return optional<string>();
 }
 
-int Instruction::set( string source, bool setArgs)
+vector<string> Instruction::getArguments() const
 {
-    this->instr_word = 0;
-    this->args.clear();
-    string token;
-    size_t p0 = 0, p1 = string::npos;
-    source = erase(source, '\t');          // avoid all tabulations
-    
-    /* This is a label check.
-     * A character that can be met only in labels is ':'
-     * We are to transform label name into relative address
-     * and to store for future needs.
-     */
-/*     p1 = source.find_first_of(":", p0);
-
-    if (p1 != string::npos)
-    {
-        addr_name.push_back(source.substr(p0, p1 - p0));
-        addr_value.push_back( this->cmd_counter);
-        cout << "Label: " << source.substr(p0, p1-p0) << " " << this->cmd_counter << endl;
-        return 0;
-    }*/
-    if ((p1 = source.find_first_of(":", p0)) != string::npos)
-    {
-        cout << source.substr(p0, p1-p0) << ": -> " << this->cmd_counter << endl;
-        return 0;   
-    }
-    else
-    {
-        /*
-         * This is a comment check.
-         */
-        p0 = 0;
-        size_t p2 = source.find_first_of("#", p0);
-        p1 = source.size();
-        source = trim(source.substr(0, p2));
-        /* 
-         * Find an operation name, e.g MOV, SETLO, etc.
-         */
-        p1 = source.find_first_of(" ", p0);
-        if (p1 != p0)
-        {
-            token = source.substr(p0, p1 - p0);
-            this->instr_string = trim(toUpper(token));
-        }
-
-        /*
-         * Process instruction arguments
-         */
-        if (setArgs)
-        {
-            p0 = source.find_first_of(" ", p0);
-            while(p0 != string::npos)
-            {
-                p1 = source.find_first_of(",", p0);
-                if(p1 != p0)
-                {
-                    token = source.substr(p0, p1 - p0);
-                    if (setAddr(token) == -1)
-                        this->args.push_back(strToInt(trim(token)));
-                    else
-                        this->args.push_back(setAddr(token));
-                }
-                p0 = source.find_first_not_of(",", p1);
-            }
-        }
-        return 1;
-    }
+	vector<string> ret;
+	sregex_token_iterator end;
+	if (isBranchInstruction())
+	{
+		regex brregex("([A-Za-z_.])([A-Za-z0-9_.])*");
+		sregex_token_iterator itr(str.begin(), str.end(), brregex, 0);
+		for(itr++; itr != end; ++itr) ret.push_back(string(itr->first, itr->second));
+	} else {
+		sregex_token_iterator itr(str.begin(), str.end(), exprArguments, 0);
+		for(; itr != end; ++itr) ret.push_back(string(itr->first, itr->second));
+	}
+	return ret;
 }
 
-void Instruction::process (string str, unsigned short int* instrs, bool setArgs)
+short Instruction::getNumFromArg(string str)
 {
-    if (this->set(str, setArgs))
-    {
-        if( this->encode(instrs))
-        {
-            instrs[this->getCmdCounter()] = this->getInstrWord();
-            cout << cmd_counter << ") " << str << " -> " << ( unsigned short int) instr_word << endl;
-            this->incCmdCounter();
-        }
-    }
+	match_results<string::const_iterator> what;
+	if(regex_search(str, what, exprDecimalNumber))
+	{
+		return atoi(string( what[0].first, what[0].second ).c_str());
+	}
+	else
+		return -1;
 }
 
-/*
- * Switch can't be used for strings. That's why we use macros here.
- * May be not the best solution
- */
-int Instruction::encode(unsigned short int* instrs)
+bool Instruction::isEmpty() const { return regex_match(str, regex("")); }
+bool Instruction::isLabel() const { return regex_match(str, exprLabel); }
+bool Instruction::isSetInstruction() const { return regex_match(str, exprOperSet); }
+bool Instruction::isThreeAddressInstruction() const { return regex_match(str, exprOperThreeAddress); }
+bool Instruction::isShiftInstruction() const { return regex_match(str, exprOperShift); }
+bool Instruction::isSetClearFlagsInstruction() const { return regex_match(str, exprOperSetClearFlags); }
+bool Instruction::isSaveRestoreFlagsInstruction() const { return regex_match(str, exprOperSaveRestoreFlags); }
+bool Instruction::isIncDecFlagInstruction() const { return regex_match(str, exprOperIncDecFlag); }
+bool Instruction::isLoadStoreInstruction() const { return regex_match(str, exprOperBranch); }
+bool Instruction::isBranchInstruction() const { return regex_match(str, exprOperBranch); }
+bool Instruction::isReturnInstruction() const { return regex_match(str, exprOperReturn); }
+bool Instruction::isSwiInstruction() const { return regex_match(str, exprOperSwi); }
+bool Instruction::isCallInstruction() const { return regex_match(str, exprOperCall); }
+bool Instruction::isMacroSetInstruction() const { return regex_match(str, exprOperMacroSet); }
+bool Instruction::isMacroCmpNegNot() const { return regex_match(str, exprOperMacroCmpNegNot); }
+bool Instruction::isMacroHaltFlags() const { return regex_match(str, exprOperMacroHaltFlags); }
+bool Instruction::isMacroForTwoInstructions() const { return regex_match(str, regex("^(set|cmp|neg|flags)")); }
+bool Instruction::isMacroForThreeInstructions() const { return regex_match(str, regex("^(not)")); }
+
+bool Instruction::validateString() const
 {
-    // SETLO and SETHI
-	if_cmd("SETLO")
-	{
-		setValueByShift( 0xE, 12);
-		setValueByShift( this->args[0], 8);
-		setValueByShift( this->args[1], 0);
-		return 1;
-	}
-	else if_cmd("SETHI")
-	{
-		setValueByShift( 0xF, 12);
-		setValueByShift( this->args[0], 8);
-		setValueByShift( this->args[1], 0);
-		return 1;
-	}
-	// Tree-address operations
-	else if_cmd("AND")
-	{
-		setValueByShift( 0x1, 15);
-		setValueByShift( 0x0, 12);
-		setValueByShift( this->args[1], 8);
-		setValueByShift( this->args[2], 4);
-		setValueByShift( this->args[3], 0);
-		return 1;
-	}
-	else if_cmd("OR")
-	{
-		setValueByShift( 0x1, 15);
-		setValueByShift( 0x1, 12);
-		setValueByShift( this->args[0], 8);
-		setValueByShift( this->args[1], 4);
-		setValueByShift( this->args[2], 0);
-		return 1;
-	}
-	else if_cmd("ADD")
-	{
-		setValueByShift( 0x1, 15);
-		setValueByShift( 0x2, 12);
-		setValueByShift( this->args[0], 8);
-		setValueByShift( this->args[1], 4);
-		setValueByShift( this->args[2], 0);
-		return 1;
-	}
-	else if_cmd("SUB")
-	{
-		setValueByShift( 0x1, 15);
-		setValueByShift( 0x3, 12);
-		setValueByShift( this->args[0], 8);
-		setValueByShift( this->args[1], 4);
-		setValueByShift( this->args[2], 0);
-                return 1;
-	}
-	else if_cmd("MULT")
-	{
-		setValueByShift( 0x1, 15);
-		setValueByShift( 0x4, 12);
-		setValueByShift( this->args[0], 8);
-		setValueByShift( this->args[1], 4);
-		setValueByShift( this->args[2], 0);
-                return 1;
-	}
-	else if_cmd("XOR")
-	{
-		setValueByShift( 0x1, 15);
-		setValueByShift( 0x5, 12);
-		setValueByShift( this->args[0], 8);
-		setValueByShift( this->args[1], 4);
-		setValueByShift( this->args[2], 0);
-                return 1;
-	}
-	// Shifts
-	else if_cmd("LSL")
-	{
-		setValueByShift( 0x3, 12);
-		setValueByShift( this->args[0], 8);
-		setValueByShift( 0x0, 4);
-		setValueByShift( this->args[1], 0);
-                return 1;
-	}
-	else if_cmd("LSR")
-	{
-		setValueByShift( 0x3, 12);
-		setValueByShift( this->args[0], 8);
-		setValueByShift( 0x1, 4);
-		setValueByShift( this->args[1], 0);
-                return 1;
-	}
-	else if_cmd("LSL8")
-	{
-		setValueByShift( 0x3, 12);
-		setValueByShift( this->args[0], 8);
-		setValueByShift( 0x2, 4);
-		setValueByShift( this->args[1], 0);
-                return 1;
-	}
-	else if_cmd("LSR8")
-	{
-		setValueByShift( 0x3, 12);
-		setValueByShift( this->args[0], 8);
-		setValueByShift( 0x3, 4);
-		setValueByShift( this->args[1], 0);
-                return 1;
-	}
-	else if_cmd("ASL")
-	{
-		setValueByShift( 0x3, 12);
-		setValueByShift( this->args[0], 8);
-		setValueByShift( 0x4, 4);
-		setValueByShift( this->args[1], 0);
-                return 1;
-	}
-	else if_cmd("ASR")
-	{
-		setValueByShift( 0x3, 12);
-		setValueByShift( this->args[0], 8);
-		setValueByShift( 0x5, 4);
-		setValueByShift( this->args[1], 0);
-                return 1;
-	}
-	// Set/Clear flags
-    else if_cmd("SETF")
-	{
-		setValueByShift( 0x3, 12);
-		setValueByShift( 0x0, 11);
-		setValueByShift( (0x10 & this->args[0]) >> 4, 8);
-		setValueByShift( 0xF & this->args[0], 0);
-		setValueByShift( 0x3, 5);
-                return 1;
-	}
-    else if_cmd("CLRF")
-	{
-		setValueByShift( 0x3, 12);
-		setValueByShift( 0x1, 11);
-		setValueByShift( (0x10 & this->args[0]) >> 4, 8);
-		setValueByShift( 0xF & this->args[0], 0);
-		setValueByShift( 0x3, 5);
-                return 1;
-	}
-	// Save/restore flags
-    else if_cmd("SAVEF")
-	{
-		setValueByShift( 0x3, 12);
-		setValueByShift( 0x7, 4);
-		setValueByShift( 0x0, 3);
-		setValueByShift( this->args[0], 8);
-                return 1;
-	}
-    else if_cmd("RSTRF")
-	{
-		setValueByShift( 0x3, 12);
-		setValueByShift( 0x7, 4);
-		setValueByShift( 0x1, 3);
-                setValueByShift( this->args[0], 8);
-                return 1;
-    }
-	// Increments
-    else if_cmd("INC")
-	{
-        setValueByShift( 0x3, 12);
-        setValueByShift( 0x2, 6);
-        setValueByShift( this->args[0], 8);
-        setValueByShift( this->args[1], 0);
-        return 1;
-	}
-    else if_cmd("DEC")
-	{
-        setValueByShift( 0x3, 12);
-        setValueByShift( 0x3, 6);
-        setValueByShift( this->args[0], 8);
-        setValueByShift( this->args[1], 0);
-        return 1;
-	}
-	// Memory Instructions
-    else if_cmd("LOAD")
-	{
-        setValueByShift( 0x2, 13);
-        setValueByShift( this->args[0], 8);
-		setValueByShift( (0x10 & this->args[1]) >> 4, 12);
-		setValueByShift(  0xF & this->args[1], 4);
-		setValueByShift( this->args[2], 0);
-        return 1;
-	}
-    else if_cmd("STORE")
-	{
-        setValueByShift( 0x3, 13);
-        setValueByShift( this->args[0], 8);
-		setValueByShift( (0x10 & this->args[1]) >> 4, 12);
-		setValueByShift(  0xF & this->args[1], 4);
-		setValueByShift( this->args[2], 0);
-        return 1;
-	}
-	// Branches, including jumps
-    else if (this->instr_string[0] == 'B')
-    {
-        int brnum = findBranch( instr_string);
-        if (brnum != -1)
-        {
-            if( brnum < 15)
-            {
-                setValueByShift( 0x1, 12);
-                setValueByShift( this->args[0], 0);
-            }
-            else
-            {
-                setValueByShift( 0x0, 12);
-                setValueByShift( 0x00ff & (this->args[0] - this->getCmdCounter()) , 0);
-            }
-            if ((brnum % 15) == 0)
-                setValueByShift( 0x0, 8);
-            else
-                setValueByShift( brnum % 15 + 1, 8);
-            return 1;
-        }
-    }
-    else if_cmd("SWI")
-    {
-        setValueByShift(0x11, 8);
-        setValueByShift( this->args[0], 0);
-        return 1;
-    }
-    else if_cmd("RTI")
-    {
-        setValueByShift(0x1110, 0);
-        return 1;
-    }
-    else if_cmd("RETURN")
-    {
-        setValueByShift(0x1111, 0);
-        return 1;
-    }
-    else if_cmd("CALL")
-    {
-        setValueByShift(0x2, 12);
-        setValueByShift( this->args[0], 4);
-        setValueByShift( this->args[1], 0);
-        return 1;
-    }
-    // Macro commands
-    else if_cmd("SET")
-    {
-        char d[256];
-        sprintf(d, "SETLO %%r%i, %i", this->args[0], this->args[1] & 0xff);
-        this->process(d, instrs, false);
-        sprintf(d, "SETHI %%r%i, %i", this->args[0], this->args[1] >> 8);
-        this->process(d, instrs, true);
-        return 0;
-    }
-    else if_cmd("CMP")
-    {
-        char d[256];
-        sprintf(d, "SETC");
-        this->process(d, instrs, false);
-        sprintf(d, "SUB %%r0, %%r%i, %%r%i", this->args[0], this->args[1]);
-        this->process(d, instrs, true);
-        return 0;
-    }
-    else if_cmd("NEG")
-    {
-        char d[256];
-        sprintf(d, "SETC");
-        this->process(d, instrs, false);
-        sprintf(d, "SUB %%r%i, %%r0, %%r%i",this->args[0], this->args[1]);
-        this->process(d, instrs, true);
-        return 0;
-    }
-    else if_cmd("NEG")
-    {
-        char d[256];
-        sprintf(d, "SETC");
-        this->process(d, instrs, false);
-        sprintf(d, "SUB %%r%i, %%r0, %%r%i",this->args[0], this->args[1]);
-        this->process(d, instrs, true);
-        return 0;
-    }
-    else if_cmd("NOT")
-    {
-        char d[256];
-        sprintf(d, "SET %%r13, 65535");
-        this->process(d, instrs, false);
-        sprintf(d, "XOR %%r%i, %%r13, %%r%i",this->args[0], this->args[1]);
-        this->process(d, instrs, true);
-        return 0;
-    }
-    else if_cmd("HALT")
-    {
-        char d[256];
-        sprintf(d, "BRR 0");
-        this->process(d, instrs, false);
-        return 0;
-    }
-    else if_cmd("NOP")
-    {
-        char d[256];
-        sprintf(d, "BRR 1");
-        this->process(d, instrs, false);
-        return 0;
-    }
-    else if_cmd("SETC")
-    {
-        char d[256];
-        sprintf(d, "SETF 8");
-        this->process(d, instrs, false);
-        return 0;
-    }
-    else if_cmd("CLRC")
-    {
-        char d[256];
-        sprintf(d, "CLRF 8");
-        this->process(d, instrs, false);
-        return 0;
-    }
-    else if_cmd("SETCB")
-    {
-        char d[256];
-        sprintf(d, "SETF 16");
-        this->process(d, instrs, false);
-        return 0;
-    }
-    else if_cmd("CLCCB")
-    {
-        char d[256];
-        sprintf(d, "CLRF 24");
-        this->process(d, instrs, false);
-        return 0;
-    }
-    else if_cmd("FLAGS")
-    {
-        char d[256];
-        sprintf(d, "CLRC");
-        this->process(d, instrs, false);
-        sprintf(d, "ADD %%r0, %%r%i, %%r0", this->args[0]);
-        this->process(d, instrs, true);
-        return 0;
-    }
-    return 0;
+	return  isEmpty() || isLabel() || isSetInstruction() || isThreeAddressInstruction() ||
+			isShiftInstruction() || isSetClearFlagsInstruction() || isSaveRestoreFlagsInstruction() ||
+			isIncDecFlagInstruction() || isLoadStoreInstruction() || isBranchInstruction() ||
+			isReturnInstruction() || isSwiInstruction() || isCallInstruction() || isMacroSetInstruction() ||
+			isMacroCmpNegNot() || isMacroHaltFlags();
 }
 
+vector<unsigned short int> Instruction::encode(unsigned cmd_counter)
+{
+	instr_word = 0;
+	static int stack = -1;
+	stack++;
+	for(int i = 0; i < stack; i++) cout << "\t";
+	cout << getString();
+	vector<string> args = getArguments();
+	vector<unsigned short int> result;
+	if (!isMacroInstruction())
+	{
+		// SETLO and SETHI
+		if(!getOperation().get().compare("setlo")) {
+			setValueByShift( 0xE, 12);
+			setValueByShift( getNumFromArg(args[0]), 8);
+			setValueByShift( getNumFromArg(args[1]), 0);
+			result.push_back(instr_word);
+		} else if (!getOperation().get().compare("sethi")) {
+			setValueByShift( 0xF, 12);
+			setValueByShift( getNumFromArg(args[0]), 8);
+			setValueByShift( getNumFromArg(args[1]), 0);
+			result.push_back(instr_word);
+		}
+		// Tree-address operations
+		else if (!getOperation().get().compare("and")) {
+			setValueByShift( 0x1, 15);
+			setValueByShift( 0x0, 12);
+			setValueByShift( getNumFromArg(args[1]), 8);
+			setValueByShift( getNumFromArg(args[2]), 4);
+			setValueByShift( getNumFromArg(args[3]), 0);
+			result.push_back(instr_word);
+		} else if (!getOperation().get().compare("or")) {
+			setValueByShift( 0x1, 15);
+			setValueByShift( 0x1, 12);
+			setValueByShift( getNumFromArg(args[0]), 8);
+			setValueByShift( getNumFromArg(args[1]), 4);
+			setValueByShift( getNumFromArg(args[2]), 0);
+			result.push_back(instr_word);
+		} else if (!getOperation().get().compare("add")) {
+			setValueByShift( 0x1, 15);
+			setValueByShift( 0x2, 12);
+			setValueByShift( getNumFromArg(args[0]), 8);
+			setValueByShift( getNumFromArg(args[1]), 4);
+			setValueByShift( getNumFromArg(args[2]), 0);
+			result.push_back(instr_word);
+		} else if (!getOperation().get().compare("sub")) {
+			setValueByShift( 0x1, 15);
+			setValueByShift( 0x3, 12);
+			setValueByShift( getNumFromArg(args[0]), 8);
+			setValueByShift( getNumFromArg(args[1]), 4);
+			setValueByShift( getNumFromArg(args[2]), 0);
+			result.push_back(instr_word);
+		} else if (!getOperation().get().compare("mult")) {
+			setValueByShift( 0x1, 15);
+			setValueByShift( 0x4, 12);
+			setValueByShift( getNumFromArg(args[0]), 8);
+			setValueByShift( getNumFromArg(args[1]), 4);
+			setValueByShift( getNumFromArg(args[2]), 0);
+			result.push_back(instr_word);
+		} else if (!getOperation().get().compare("xor")) {
+			setValueByShift( 0x1, 15);
+			setValueByShift( 0x5, 12);
+			setValueByShift( getNumFromArg(args[0]), 8);
+			setValueByShift( getNumFromArg(args[1]), 4);
+			setValueByShift( getNumFromArg(args[2]), 0);
+			result.push_back(instr_word);
+		}
+		// Shifts
+		else if (!getOperation().get().compare("lsl")) {
+			setValueByShift( 0x3, 12);
+			setValueByShift( getNumFromArg(args[0]), 8);
+			setValueByShift( 0x0, 4);
+			setValueByShift( getNumFromArg(args[1]), 0);
+			result.push_back(instr_word);
+		} else if (!getOperation().get().compare("lsr")) {
+			setValueByShift( 0x3, 12);
+			setValueByShift( getNumFromArg(args[0]), 8);
+			setValueByShift( 0x1, 4);
+			setValueByShift( getNumFromArg(args[1]), 0);
+			result.push_back(instr_word);
+		} else if (!getOperation().get().compare("lsl8")) {
+			setValueByShift( 0x3, 12);
+			setValueByShift( getNumFromArg(args[0]), 8);
+			setValueByShift( 0x2, 4);
+			setValueByShift( getNumFromArg(args[1]), 0);
+			result.push_back(instr_word);
+		} else if (!getOperation().get().compare("lsr8")) {
+			setValueByShift( 0x3, 12);
+			setValueByShift( getNumFromArg(args[0]), 8);
+			setValueByShift( 0x3, 4);
+			setValueByShift( getNumFromArg(args[1]), 0);
+			result.push_back(instr_word);
+		} else if (!getOperation().get().compare("asl")) {
+			setValueByShift( 0x3, 12);
+			setValueByShift( getNumFromArg(args[0]), 8);
+			setValueByShift( 0x4, 4);
+			setValueByShift( getNumFromArg(args[1]), 0);
+			result.push_back(instr_word);
+		} else if (!getOperation().get().compare("asr")) {
+			setValueByShift( 0x3, 12);
+			setValueByShift( getNumFromArg(args[0]), 8);
+			setValueByShift( 0x5, 4);
+			setValueByShift( getNumFromArg(args[1]), 0);
+			result.push_back(instr_word);
+		}
+		// Set/Clear flags
+		else if (!getOperation().get().compare("setf")) {
+			setValueByShift( 0x3, 12);
+			setValueByShift( 0x0, 11);
+			setValueByShift( (0x10 & getNumFromArg(args[0])) >> 4, 8);
+			setValueByShift( 0xF & getNumFromArg(args[0]), 0);
+			setValueByShift( 0x3, 5);
+			result.push_back(instr_word);
+		} else if (!getOperation().get().compare("clrf")) {
+			setValueByShift( 0x3, 12);
+			setValueByShift( 0x1, 11);
+			setValueByShift( (0x10 & getNumFromArg(args[0])) >> 4, 8);
+			setValueByShift( 0xF & getNumFromArg(args[0]), 0);
+			setValueByShift( 0x3, 5);
+			result.push_back(instr_word);
+		}
+		// Save/restore flags
+		else if (!getOperation().get().compare("savef")) {
+			setValueByShift( 0x3, 12);
+			setValueByShift( 0x7, 4);
+			setValueByShift( 0x0, 3);
+			setValueByShift( getNumFromArg(args[0]), 8);
+			result.push_back(instr_word);
+		} else if (!getOperation().get().compare("rstrf")) {
+			setValueByShift( 0x3, 12);
+			setValueByShift( 0x7, 4);
+			setValueByShift( 0x1, 3);
+			setValueByShift( getNumFromArg(args[0]), 8);
+			result.push_back(instr_word);
+		}
+		// Increments
+		else if (!getOperation().get().compare("inc")) {
+			setValueByShift( 0x3, 12);
+			setValueByShift( 0x2, 6);
+			setValueByShift( getNumFromArg(args[0]), 8);
+			setValueByShift( getNumFromArg(args[1]), 0);
+			result.push_back(instr_word);
+		} else if (!getOperation().get().compare("dec")) {
+			setValueByShift( 0x3, 12);
+			setValueByShift( 0x3, 6);
+			setValueByShift( getNumFromArg(args[0]), 8);
+			setValueByShift( getNumFromArg(args[1]), 0);
+			result.push_back(instr_word);
+		}
+		// Memory Instructions
+		else if (!getOperation().get().compare("load")) {
+			setValueByShift( 0x2, 13);
+			setValueByShift( getNumFromArg(args[0]), 8);
+			setValueByShift( (0x10 & getNumFromArg(args[1])) >> 4, 12);
+			setValueByShift(  0xF & getNumFromArg(args[1]), 4);
+			setValueByShift( getNumFromArg(args[2]), 0);
+			result.push_back(instr_word);
+		} else if (!getOperation().get().compare("store")) {
+			setValueByShift( 0x3, 13);
+			setValueByShift( getNumFromArg(args[0]), 8);
+			setValueByShift( (0x10 & getNumFromArg(args[1])) >> 4, 12);
+			setValueByShift(  0xF & getNumFromArg(args[1]), 4);
+			setValueByShift( getNumFromArg(args[2]), 0);
+			result.push_back(instr_word);
+		}
+		// Branches, including jumps
+		else if (isBranchInstruction())
+		{
+			int brnum = findBranch( getOperation().get());
+			if (brnum != -1)
+			{
+				if( brnum < 15)
+				{
+					setValueByShift( 0x1, 12);
+					setValueByShift( getNumFromArg(args[0]), 0);
+				}
+				else
+				{
+					setValueByShift( 0x0, 12);
+					setValueByShift( 0x00ff & (getNumFromArg(args[0]) - cmd_counter) , 0);
+				}
+				if ((brnum % 15) == 0)
+					setValueByShift( 0x0, 8);
+				else
+					setValueByShift( brnum % 15 + 1, 8);
+				result.push_back(instr_word);
+			}
+		} else if (!getOperation().get().compare("swi")) {
+			setValueByShift(0x11, 8);
+			setValueByShift( getNumFromArg(args[0]), 0);
+			result.push_back(instr_word);
+		} else if (!getOperation().get().compare("rti")) {
+			setValueByShift(0x1110, 0);
+		} else if (!getOperation().get().compare("return")) {
+			setValueByShift(0x1111, 0);
+			result.push_back(instr_word);
+		} else if (!getOperation().get().compare("call")) {
+			setValueByShift(0x2, 12);
+			setValueByShift( getNumFromArg(args[0]), 4);
+			setValueByShift( getNumFromArg(args[1]), 0);
+			result.push_back(instr_word);
+		}
+		if (result.size() == 1) cout << "\t\t\t" << result[0] << endl;
+	}
+	else {
+		cout << endl;
+		// Macro commands
+			if (!getOperation().get().compare("set")) {
+			char d[256];
+			sprintf(d, "setlo %%r%i, %i", getNumFromArg(args[0]), getNumFromArg(args[1]) & 0xff);
+			vector<unsigned short int> v = Instruction(d).encode(cmd_counter);
+			for (vector<unsigned short int>::iterator i = v.begin(); i != v.end(); i++)
+				result.push_back(*i);
+			sprintf(d, "sethi %%r%i, %i", getNumFromArg(args[0]), getNumFromArg(args[1]) >> 8);
+			v = Instruction(d).encode(cmd_counter++);
+			for (vector<unsigned short int>::iterator i = v.begin(); i != v.end(); i++)
+				result.push_back(*i);
+		} else if (!getOperation().get().compare("cmp")) {
+			char d[256];
+			sprintf(d, "setc");
+			vector<unsigned short int> v = Instruction(d).encode(cmd_counter);
+			for (vector<unsigned short int>::iterator i = v.begin(); i != v.end(); i++)
+				result.push_back(*i);
+			sprintf(d, "sub %%r0, %%r%i, %%r%i", getNumFromArg(args[0]), getNumFromArg(args[1]));
+			v = Instruction(d).encode(cmd_counter++);
+			for (vector<unsigned short int>::iterator i = v.begin(); i != v.end(); i++)
+				result.push_back(*i);
+		} else if (!getOperation().get().compare("neg")) {
+			char d[256];
+			sprintf(d, "setc");
+			vector<unsigned short int> v = Instruction(d).encode(cmd_counter);
+			for (vector<unsigned short int>::iterator i = v.begin(); i != v.end(); i++)
+				result.push_back(*i);
+			sprintf(d, "sub %%r%i, %%r0, %%r%i", getNumFromArg(args[0]), getNumFromArg(args[1]));
+			v = Instruction(d).encode(cmd_counter++);
+			for (vector<unsigned short int>::iterator i = v.begin(); i != v.end(); i++)
+				result.push_back(*i);
+		} else if (!getOperation().get().compare("not")) {
+			char d[256];
+			sprintf(d, "set %%r13, 65535");
+			vector<unsigned short int> v = Instruction(d).encode(cmd_counter);
+			for (vector<unsigned short int>::iterator i = v.begin(); i != v.end(); i++)
+				result.push_back(*i);
+			sprintf(d, "xor %%r%i, %%r13, %%r%i", getNumFromArg(args[0]), getNumFromArg(args[1]));
+			v = Instruction(d).encode(cmd_counter++);
+			for (vector<unsigned short int>::iterator i = v.begin(); i != v.end(); i++)
+				result.push_back(*i);
+		} else if (!getOperation().get().compare("halt")) {
+			char d[256];
+			sprintf(d, "brr 0");
+			vector<unsigned short int> v = Instruction(d).encode(cmd_counter);
+			for (vector<unsigned short int>::iterator i = v.begin(); i != v.end(); i++)
+				result.push_back(*i);
+		} else if (!getOperation().get().compare("nop")) {
+			char d[256];
+			sprintf(d, "brr 1");
+			vector<unsigned short int> v = Instruction(d).encode(cmd_counter);
+			for (vector<unsigned short int>::iterator i = v.begin(); i != v.end(); i++)
+				result.push_back(*i);
+		} else if (!getOperation().get().compare("setc")) {
+			char d[256];
+			sprintf(d, "setf 8");
+			vector<unsigned short int> v = Instruction(d).encode(cmd_counter);
+			for (vector<unsigned short int>::iterator i = v.begin(); i != v.end(); i++)
+				result.push_back(*i);
+		} else if (!getOperation().get().compare("clrc")) {
+			char d[256];
+			sprintf(d, "clr 8");
+			vector<unsigned short int> v = Instruction(d).encode(cmd_counter);
+			for (vector<unsigned short int>::iterator i = v.begin(); i != v.end(); i++)
+				result.push_back(*i);
+		} else if (!getOperation().get().compare("setcb")) {
+			char d[256];
+			sprintf(d, "setf 16");
+			vector<unsigned short int> v = Instruction(d).encode(cmd_counter);
+			for (vector<unsigned short int>::iterator i = v.begin(); i != v.end(); i++)
+				result.push_back(*i);
+		} else if (!getOperation().get().compare("clccb")) {
+			char d[256];
+			sprintf(d, "clrf 24");
+			vector<unsigned short int> v = Instruction(d).encode(cmd_counter);
+			for (vector<unsigned short int>::iterator i = v.begin(); i != v.end(); i++)
+				result.push_back(*i);
+		} else if (!getOperation().get().compare("flags")) {
+			char d[256];
+			sprintf(d, "clrc");
+			vector<unsigned short int> v = Instruction(d).encode(cmd_counter);
+			for (vector<unsigned short int>::iterator i = v.begin(); i != v.end(); i++)
+				result.push_back(*i);
+			sprintf(d, "add %%r0, %%r%i, %%r0", getNumFromArg(args[0]));
+			v = Instruction(d).encode(cmd_counter++);
+			for (vector<unsigned short int>::iterator i = v.begin(); i != v.end(); i++)
+				result.push_back(*i);
+		}
+		cout << endl;
+	}
+	stack--;
+	return result;
+}

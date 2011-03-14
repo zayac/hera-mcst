@@ -1,112 +1,84 @@
-#ifndef INSTRUCTION_H
-#define INSTRUCTION_H
+#ifndef INSTRUCTION_H_
+#define INSTRUCTION_H_
 
-#include <iostream>
-#include <cassert>
-#include "ELF_Types.h"
 #include <string>
-#include <vector>
-
-#include <stdlib.h>
-#include <ctype.h>
+#include <boost/regex.hpp>
+#include <boost/optional/optional.hpp>
 
 using namespace std;
-
-// typedef signed short Int16;
+using namespace boost;
 
 class Instruction
 {
-    /* Instruction encoded in a binary form */
-    short int instr_word;                   // A single encoded instruction
-    int cmd_counter;                        // Program counter
-    vector<int> args;                       // Array of arguments
-    string instr_string;                    // Operation string representation, e.g. MOV, SETLO, etc.
-    vector<string>addr_name;                // Label names
-    vector<int> addr_value;                 // Label values (relative addresses)
+	string str;
+	unsigned short int instr_word;
+    vector<string> branches;
 
-    /* just an array of string which are for branch instruction.
-     * See constructor to see it's initialization.
-     */
-    vector<string> branches;                
-    
-    public:
-    Instruction();
+	static regex exprLabel;							// a regular expression that evaluates a label
+	static regex exprOperation;						// a regular expression that evaluates an operation
+	static regex exprArguments;						// a regular expression that evaluates arguments
+	static regex exprDecimalNumber;					// a regular expression that evaluates a number
+	static regex exprRegister;						// a regular expression that evaluates a register
 
+	// the following regex relates to instruction match
+	static regex exprOperSet;						// SETLO and SETHI
+	static regex exprOperThreeAddress;				// Three-address operations
+	static regex exprOperShift;						// shift operations
+	static regex exprOperSetClearFlags;				// set/clear flags operations
+	static regex exprOperSaveRestoreFlags;			// save/restore flags operations
+	static regex exprOperIncDecFlag;				// incDec flags operations
+	static regex exprOperLoadStore;					// load/store operations
+	static regex exprOperBranch;					// branch operations
+	static regex exprOperReturn;					// return operations
+	static regex exprOperSwi;						// software interrupt operations
+	static regex exprOperCall;						// call instruction
+	// these are macro instructions
+	static regex exprOperMacroSet;					// set instruction
+	static regex exprOperMacroCmpNegNot;			// cmp, neg or not instruction
+	static regex exprOperMacroHaltFlags;			// halt instruction and flags instructions
 
-    // check if a string is a label and cache it
-    void checkLabel(string source);
-    // just several getters and setters
-    int getInstrWord(){ return instr_word; }
-    int getCmdCounter(){ return cmd_counter; }
-    void setCmdCounter( int counter) { this->cmd_counter = counter; }
-    void incCmdCounter() { this->cmd_counter++; }
-    void setInstrWord(int instr) { this->instr_word = instr; }
+	void removeWhiteSpaces();						// removes all unnecessary special symbols from an instruction string
+	void removeComment();							// removes comment from an instruction string
+	void cleanInstruction();						// removes comments and whitespaces
 
-    /* A method that encodes a single instructions.
-     * The first argument represents instruction string.
-     * The second argument is a pointer to the array of encoded instructions.
-     * The third argument is true if the instructions we are to encode has arguments.
-     */
-    void process(string str, unsigned short int* instrs, bool setArgs);
+    void setValueByShift( int value, int shift) { this->instr_word = instr_word + (value << shift); }
 
-    /*
-     * A very helpful function that sets a given number with a given shift in the target instruction.
-     */
-    void setValueByShift( int value, int shift)
-    {
-        this->instr_word = instr_word + (value << shift);
-    }
+    int findBranch( string br);						// Image branch name into it's index in branches vector
+public:
+	Instruction(string str);
+	Instruction();
+	bool validateString() const ;					// checks if an instruction string is correct
+	string inline getString() const { return str; }
+	unsigned short int getInstructionWord() const { return instr_word; }
+	vector<unsigned short int> encode(unsigned cmd_counter);
 
-    // The assembler is case-insensitive. That's why we are to uppercase all instructions 
-    string toUpper( string str)
-    {
-        string ret = str;
-        for(unsigned int i = 0; i < ret.size(); i++)
-        {
-            ret[i] = toupper( ret[i]);
-        }
-        return ret;
-    }
-
-    /*
-     * Registers in assembler are represented as a number with a prefix,
-     * e.g. %5 or r5. In this case just number 5 should be returned.
-     */
-    int strToInt(string str)
-    {
-        unsigned int sc = str.find('%');
-        if( sc != string::npos)
-        {
-            str.erase(sc, 1);
-        }
-        sc = str.find('r');
-        if( sc != string::npos)
-        {
-            str.erase(sc, 1);
-        }
-        return atoi(str.c_str());
-    }
-
-    // Image branch name into it's index in branches vector
-    int findBranch( string br)
-    {
-        for ( unsigned int i = 0; i < this->branches.size(); i++)
-        {
-            if (br == this->branches[i])
-                return i;
-        }
-        return -1;
-    }
-    // The function is used to parse source string and to set operation and arguments separately 
-    int set(string source, bool setArgs);
-    // Encodes instruction to a number. A method set should be called before.
-    int encode( unsigned short int* instrs);
-    // avoid all useless spaces
-    string trim(string str);
-    // Remove all chr occurencies in the str
-    string erase(string str, char chr);
-    // Image label name into the address
-    int setAddr(string str);
+	/*
+	 * optional<string> is used for setting a "null" string
+	 * get an operation name
+	 */
+	optional<string> getOperation() const;
+	vector<string> getArguments() const;
+	static short getNumFromArg(string str);
+	bool isEmpty() const;
+	bool isLabel() const;								// check if an instruction is a label for branch
+	bool isSetInstruction() const;						// check if an instruction is a set instruction
+	bool isMacroInstruction() const;
+	bool isThreeAddressInstruction() const;				// check if an instruction is a three-address instruction
+	bool isShiftInstruction() const;					// check if an instruction is a shift instruction
+	bool isSetClearFlagsInstruction() const;			// check if an instruction is a ser/clear flags instruction
+	bool isSaveRestoreFlagsInstruction() const;			// check if an instruction is a saver/restore flags instruction
+	bool isIncDecFlagInstruction() const;				// check if an instruction is a inc/dec flag instruction
+	bool isLoadStoreInstruction() const;				// check if an instruction is a load/store instruction
+	bool isBranchInstruction() const;					// check if an instruction is a branch instruction
+	bool isReturnInstruction() const;					// check if an instruction is a return instruction
+	bool isSwiInstruction() const;						// check if an instruction is a software interrupt instruction
+	bool isCallInstruction() const;						// check if an instruction is a call instruction
+	bool isMacroSetInstruction() const;					// check if an instruction is a macro set instruction
+	bool isMacroCmpNegNot() const;						// check if an instruction is a macro cmp/neg/not instruction
+	bool isMacroHaltFlags() const;						// check if an instruction is a macro halt or flags instruction
+	bool isMacroForTwoInstructions() const;				// check in an instruction is a macro, that can be devided into two instructions
+	bool isMacroForThreeInstructions() const;			// check in an instruction is a macro, that can be devided into three instructions
 };
 
-#endif /* INSTRUCTION_H */
+
+#endif /* INSTRUCTION_H_ */
