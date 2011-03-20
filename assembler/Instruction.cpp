@@ -7,26 +7,27 @@
 using namespace std;
 using namespace boost;
 
+regex Instruction::exprOperSection("^\\.[A-Za-z]+ [\x21-\x7E]*$");
 regex Instruction::exprLabel("^([A-Za-z_.])([A-Za-z0-9_.])*:$");
 regex Instruction::exprOperation("([A-Za-z])+");
-regex Instruction::exprArguments("(%r[0-9]{1,2})|([0-9]+)");
+regex Instruction::exprArguments("((%r[0-9]{1,2})|(%fp))|([0-9]+)");
 regex Instruction::exprDecimalNumber("[0-9]+");
-regex Instruction::exprRegister("%r[0-9]{1,2}");
-regex Instruction::exprOperSet("^(setlo|sethi) (%r[0-9]{1,2}) *, *((%r[0-9]{1,2})|([0-9]+))", regex_constants::icase);
-regex Instruction::exprOperThreeAddress("^(and|or|add|sub|mult|xor) (%r[0-9]{1,2}) *, *((%r[0-9]{1,2})|([0-9]+)) *, *((%r[0-9]{1,2})|([0-9]+))", regex_constants::icase);
-regex Instruction::exprOperShift("^(lsl|lsr|lsl8|lsr8|asl|asr) (%r[0-9]{1,2}) *, *((%r[0-9]{1,2})|([0-9]+))", regex_constants::icase);
-regex Instruction::exprOperSetClearFlags("^(setf|clrf) (%r[0-9]{1,2})", regex_constants::icase);
-regex Instruction::exprOperSaveRestoreFlags("^(save|rstrf) (%r[0-9]{1,2})", regex_constants::icase);
-regex Instruction::exprOperIncDecFlag("^(inc|dec) (%r[0-9]{1,2}) *, *((%r[0-9]{1,2})|([0-9]+))", regex_constants::icase);
-regex Instruction::exprOperLoadStore("^(load|store) (%r[0-9]{1,2}) *, *((%r[0-9]{1,2})|([0-9]+)) *, *((%r[0-9]{1,2})|([0-9]+))", regex_constants::icase);
+regex Instruction::exprRegister("(%r[0-9]{1,2})|(%fp)");
+regex Instruction::exprOperSet("^(setlo|sethi) ((%r[0-9]{1,2})|(%fp)) *, *(([+-]?[0-9]{1,3}))", regex_constants::icase);
+regex Instruction::exprOperThreeAddress("^(and|or|add|sub|mult|xor) ((%r[0-9]{1,2})|(%fp)) *, *(((%r[0-9]{1,2})|(%fp))|([0-9]+)) *, *(((%r[0-9]{1,2})|(%fp))|([0-9]+))", regex_constants::icase);
+regex Instruction::exprOperShift("^(lsl|lsr|lsl8|lsr8|asl|asr) ((%r[0-9]{1,2})|(%fp)) *, *(((%r[0-9]{1,2})|(%fp))|([0-9]+))", regex_constants::icase);
+regex Instruction::exprOperSetClearFlags("^(setf|clrf) ((%r[0-9]{1,2})|(%fp))", regex_constants::icase);
+regex Instruction::exprOperSaveRestoreFlags("^(save|rstrf) ((%r[0-9]{1,2})|(%fp))", regex_constants::icase);
+regex Instruction::exprOperIncDecFlag("^(inc|dec) ((%r[0-9]{1,2})|(%fp)) *, *(((%r[0-9]{1,2})|(%fp))|([0-9]+))", regex_constants::icase);
+regex Instruction::exprOperLoadStore("^(load|store) ((%r[0-9]{1,2})|(%fp)) *, *([0-9]{1,2}) *, *((%r[0-9]{1,2})|(%fp))", regex_constants::icase);
 regex Instruction::exprOperBranch("^(brr?|blr?|bger?|bler?|bgr?|buler?|bugr?|bzr?|bnzr?|bcr?|bncr?|bsr?|bnsr?|bvr?|bnvr?) ([A-Za-z_.])([A-Za-z0-9_.])*", regex_constants::icase);
 regex Instruction::exprOperReturn("^(return|rti)", regex_constants::icase);
 regex Instruction::exprOperSwi("^(swi) [0-9]+", regex_constants::icase);
-regex Instruction::exprOperCall("^(call) (%r[0-9]{1,2}) *, *[0-9]+", regex_constants::icase);
+regex Instruction::exprOperCall("^(call) ((%r[0-9]{1,2})|(%fp)) *, *[0-9]+", regex_constants::icase);
 
 // macro instructions
-regex Instruction::exprOperMacroSet("^(set) (%r[0-9]{1,2}) *, *((%r[0-9]{1,2})|([0-9]+))", regex_constants::icase);
-regex Instruction::exprOperMacroCmpNegNot("^(cmp|neg|not) ((%r[0-9]{1,2})|([0-9]+)) *, *((%r[0-9]{1,2})|([0-9]+))", regex_constants::icase);
+regex Instruction::exprOperMacroSet("^(set) ((%r[0-9]{1,2})|(%fp)) *, *(([+-]?[0-9]{1,5}))", regex_constants::icase);
+regex Instruction::exprOperMacroCmpNegNot("^(cmp|neg|not) (((%r[0-9]{1,2})|(%fp))|([0-9]+)) *, *(((%r[0-9]{1,2})|(%fp))|([0-9]+))", regex_constants::icase);
 regex Instruction::exprOperMacroHaltFlags("^(halt|nop|setc|clrc|setcb|clccb|)", regex_constants::icase);
 
 Instruction::Instruction(string str) : str(str)
@@ -96,7 +97,13 @@ vector<string> Instruction::getArguments() const
 		for(itr++; itr != end; ++itr) ret.push_back(string(itr->first, itr->second));
 	} else {
 		sregex_token_iterator itr(str.begin(), str.end(), exprArguments, 0);
-		for(; itr != end; ++itr) ret.push_back(string(itr->first, itr->second));
+		for(; itr != end; ++itr)
+		{
+			if (string(itr->first, itr->second).compare("%fp"))
+				ret.push_back(string(itr->first, itr->second));
+			else
+				ret.push_back(string("%r14"));
+		}
 	}
 	return ret;
 }
@@ -120,7 +127,7 @@ bool Instruction::isShiftInstruction() const { return regex_match(str, exprOperS
 bool Instruction::isSetClearFlagsInstruction() const { return regex_match(str, exprOperSetClearFlags); }
 bool Instruction::isSaveRestoreFlagsInstruction() const { return regex_match(str, exprOperSaveRestoreFlags); }
 bool Instruction::isIncDecFlagInstruction() const { return regex_match(str, exprOperIncDecFlag); }
-bool Instruction::isLoadStoreInstruction() const { return regex_match(str, exprOperBranch); }
+bool Instruction::isLoadStoreInstruction() const { return regex_match(str, exprOperLoadStore); }
 bool Instruction::isBranchInstruction() const { return regex_match(str, exprOperBranch); }
 bool Instruction::isReturnInstruction() const { return regex_match(str, exprOperReturn); }
 bool Instruction::isSwiInstruction() const { return regex_match(str, exprOperSwi); }
@@ -130,6 +137,7 @@ bool Instruction::isMacroCmpNegNot() const { return regex_match(str, exprOperMac
 bool Instruction::isMacroHaltFlags() const { return regex_match(str, exprOperMacroHaltFlags); }
 bool Instruction::isMacroForTwoInstructions() const { return regex_match(str, regex("^(set|cmp|neg|flags)")); }
 bool Instruction::isMacroForThreeInstructions() const { return regex_match(str, regex("^(not)")); }
+bool Instruction::isSection() const { return regex_match(str, exprOperSection); }
 
 bool Instruction::validateString() const
 {

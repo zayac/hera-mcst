@@ -54,8 +54,15 @@ void Assembler::run(string s)
         }
         else
         {
-        	cout << filename << ". Error in line " << lineCounter << ": \"" << str.getString() <<  "\"" << endl;
-        	failbit = true;
+        	if (str.isSection())
+        	{
+            	cout << filename << ". Warning in line " << lineCounter << ": \"" << str.getString() <<  "\". Section detected." << endl;
+        	}
+        	else
+        	{
+        		cout << filename << ". Error in line " << lineCounter << ": \"" << str.getString() <<  "\"" << endl;
+        		failbit = true;
+        	}
         }
         lineCounter++;
     }
