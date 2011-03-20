@@ -36,6 +36,7 @@ class Instruction
 	static regex exprOperMacroSet;					// set instruction
 	static regex exprOperMacroCmpNegNot;			// cmp, neg or not instruction
 	static regex exprOperMacroHaltFlags;			// halt instruction and flags instructions
+	static regex exprOperSection;
 
 	void removeWhiteSpaces();						// removes all unnecessary special symbols from an instruction string
 	void removeComment();							// removes comment from an instruction string
@@ -59,6 +60,7 @@ public:
 	optional<string> getOperation() const;
 	vector<string> getArguments() const;
 	static short getNumFromArg(string str);
+	bool isSection() const;
 	bool isEmpty() const;
 	bool isLabel() const;								// check if an instruction is a label for branch
 	bool isSetInstruction() const;						// check if an instruction is a set instruction
