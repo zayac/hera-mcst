@@ -20,10 +20,11 @@ int main(int argc, char** argv)
         return 0;
     }
     int i = 0;
-    Assembler assemb;
+    Assembler* assemb = Assembler::getInstance();
     while(argv[++i])
     {
-    	assemb.run(argv[i]);
+    	assemb->run(argv[i]);
     }
+    assemb->writeToFile();
 }
 

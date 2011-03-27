@@ -3,13 +3,13 @@
 #include "ELF_Output.h"
 
 int Assembler::BUFFER_SIZE = 32768;
-
+Assembler* Assembler::instance = NULL;
 Assembler::Assembler()
 {
 }
 void Assembler::open(string str)
 {
-	filename = str;
+    filename = str;
     ifile.open(str.c_str());
     if(ifile.fail())
     {
@@ -19,11 +19,11 @@ void Assembler::open(string str)
 
 void Assembler::run(string s)
 {
-	open(s);
-	Instruction str;
-	string tmps;
-	unsigned lineCounter = 1;
-	pc = 1;
+    open(s);
+    Instruction str;
+    string tmps;
+    unsigned lineCounter = 1;
+    pc = 1;
     bool failbit = false;
     while(!ifile.eof())
     {
@@ -34,35 +34,39 @@ void Assembler::run(string s)
             if(str.isLabel())
             {
             	if (labels.find(str.getString()) == labels.end())
-            		labels.insert(pair<string, unsigned>(str.getString(), pc));
+                {
+                    // cout << str.getString() << " " << pc << endl;
+                    string s1 = str.getString();
+                    labels.insert(pair<string, unsigned>(s1.substr(0, s1.length() - 1), pc));
+                }
             	else
             	{
-                	cout << filename << ". Duplicate label in line " << lineCounter << ": \"" << str.getString() <<  "\"" << endl;
-                	failbit = true;
+                    cout << filename << ". Duplicate label in line " << lineCounter << ": \"" << str.getString() <<  "\"" << endl;
+                    failbit = true;
             	}
             }
             else if (!str.isEmpty())
             {
-        		asmInstrs.push_back(str);
-        		if(str.isMacroForTwoInstructions())
-        			pc += 2;
-        		else if (str.isMacroForThreeInstructions())
-        			pc +=3;
-        		else
-        			pc++;
+                asmInstrs.push_back(str);
+                if(str.isMacroForTwoInstructions())
+                        pc += 2;
+                else if (str.isMacroForThreeInstructions())
+                        pc +=3;
+                else
+                        pc++;
             }
         }
         else
         {
-        	if (str.isSection())
-        	{
-            	cout << filename << ". Warning in line " << lineCounter << ": \"" << str.getString() <<  "\". Section detected." << endl;
-        	}
-        	else
-        	{
-        		cout << filename << ". Error in line " << lineCounter << ": \"" << str.getString() <<  "\"" << endl;
-        		failbit = true;
-        	}
+            if (str.isSection())
+            {
+            cout << filename << ". Warning in line " << lineCounter << ": \"" << str.getString() <<  "\". Section detected." << endl;
+            }
+            else
+            {
+                cout << filename << ". Error in line " << lineCounter << ": \"" << str.getString() <<  "\"" << endl;
+                failbit = true;
+            }
         }
         lineCounter++;
     }
@@ -77,8 +81,8 @@ void Assembler::run(string s)
     	vector<unsigned short int> ret = instr->encode(pc++);
     	for (vector<unsigned short int>::iterator i = ret.begin(); i != ret.end(); i++)
     	{
-    		encodedInstructions.push_back(*i);
-    		//cout << "\t" << *i << endl;
+            encodedInstructions.push_back(*i);
+            //cout << "\t" << *i << endl;
     	}
     }
 }
