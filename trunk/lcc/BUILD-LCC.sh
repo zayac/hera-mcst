@@ -67,7 +67,7 @@ fi
 
 if test "xx$TMPDIR" = "xx"
 then
-    TMPDIR=/usr/tmp
+    TMPDIR=/tmp
 fi
 
 echo "The build requires about 11MB of free space under $TMPDIR"
@@ -147,6 +147,13 @@ echo
 echo Making lcc driver ...
 echo make CC="$CC $CFLAGS" LD="$CC $CFLAGS" HOSTFILE=etc/$HOST.c lcc CFLAGS="'"-DLCCDIR=\"$INSTALLLIBDIR/\""'"
 make CC="$CC $CFLAGS" LD="$CC $CFLAGS" HOSTFILE=etc/$HOST.c lcc CFLAGS="'"-DLCCDIR=\"$INSTALLLIBDIR/\""'"
+#Check command "make CC="$CC $CFLAGS" LD="$CC $CFLAGS" HOSTFILE=etc/$HOST.c lcc CFLAGS="'"-DLCCDIR=\"$INSTALLLIBDIR/\""'""
+a=$?
+if [ $a != 0 ]
+then
+	echo Exit status $a
+	exit
+fi
 
 echo
 echo Building compiler and accessories ...
@@ -154,6 +161,13 @@ echo Building compiler and accessories ...
 # defaults to cc, which fails because it is for K&R C
 echo make CC="$CC $CFLAGS" LD="$CC $CFLAGS" all
 make CC="$CC $CFLAGS" LD="$CC $CFLAGS" all
+#Check command "make CC="$CC $CFLAGS" LD="$CC $CFLAGS" all"
+a=$?
+if [ $a != 0 ]
+then
+	echo Exit status $a
+	exit
+fi
 
 echo
 echo Compiler test 1 ...
