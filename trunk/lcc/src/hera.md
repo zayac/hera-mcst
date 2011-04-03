@@ -105,12 +105,8 @@ static int cseg;
 %term INDIRI2=2117
 %term INDIRI4=4165
 %term INDIRI8=8261
-<<<<<<< .mine
 %term INDIRP2=2119
-=======
 %term INDIRP2=2119 
-/*new*/
->>>>>>> .r21
 %term INDIRP4=4167
 %term INDIRP8=8263
 %term INDIRU1=1094
