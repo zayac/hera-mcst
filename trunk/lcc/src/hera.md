@@ -105,8 +105,12 @@ static int cseg;
 %term INDIRI2=2117
 %term INDIRI4=4165
 %term INDIRI8=8261
+<<<<<<< .mine
+%term INDIRP2=2119
+=======
 %term INDIRP2=2119 
 /*new*/
+>>>>>>> .r21
 %term INDIRP4=4167
 %term INDIRP8=8263
 %term INDIRU1=1094
@@ -198,11 +202,11 @@ static int cseg;
 %term ADDI2=2357
 %term ADDI4=4405
 %term ADDI8=8501
-%term ADDP2=2359 /*new pointer++ */
+%term ADDP2=2359 
 %term ADDP4=4407
 %term ADDP8=8503
 %term ADDU2=2358
-%term ADDU4=4406 /*unsgd*/
+%term ADDU4=4406
 %term ADDU8=8502
 
 %term SUBF4=4417
