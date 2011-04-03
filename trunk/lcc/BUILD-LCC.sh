@@ -211,6 +211,7 @@ do
     chmod 775 $INSTALLBINDIR/$f
     ls -l $INSTALLBINDIR/$f $INSTALLBINDIR/$f-$VERSIONNUMBER
 done
+cp $INSTALL_BIN_DIR/lcc .
 
 echo
 echo Installing auxiliary programs and run-time libraries ...
