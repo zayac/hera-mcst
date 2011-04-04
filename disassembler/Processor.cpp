@@ -112,8 +112,8 @@ inline bool Translator::Perform_shift_inc_flags (word cmd)
 //---------------------------------------------------------------------------------------------------------------
 inline void Translator::Process_set_clr_flags (word cmd)
 {
-	five_bits b = (cmd&0xf) | (cmd&0x0100 >> 4); //0000 000a 0000 bcde -> abcde
-	if ((cmd&0x0400) == 0) //0000 0100 0000 0000
+	five_bits b = (cmd&0x000f) | ((cmd&0x0100) >> 4); //0000 000a 0000 bcde -> abcde
+	if ((cmd&0x0800) == 0) //0000 1000 0000 0000
 		_exe->SETF (b);
 	else
 		_exe->CLRF (b);
