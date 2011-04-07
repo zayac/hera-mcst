@@ -105,7 +105,6 @@ static int cseg;
 %term INDIRI2=2117
 %term INDIRI4=4165
 %term INDIRI8=8261
-%term INDIRP2=2119
 %term INDIRP2=2119 
 %term INDIRP4=4167
 %term INDIRP8=8263
