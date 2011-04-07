@@ -180,6 +180,7 @@ static int cseg;
 %term RETU8=8438
 %term RETV=248
 
+%term ADDRGP2=2311
 %term ADDRGP4=4359
 %term ADDRGP8=8455
 
@@ -422,7 +423,7 @@ base: ADDU4(reg,con13)  "%%%0+%1"
 base: reg    "%%%0"
 base: con13  "%0"
 base: stk13  "%%fp,%0"
-addr: base           "0,%0"
+addr: base           "%0"
 addr: ADDI2(reg,reg)  "%%%0+%%%1"
 addr: ADDI4(reg,reg)  "%%%0+%%%1"
 addr: ADDP2(reg,reg)  "%%%0+%%%1"
@@ -525,7 +526,7 @@ reg: CVUI4(reg)  "and %%%0,0xff,%%%c\n" (a->syms[0]->u.c.v.i == 1 ? 1 : LBURG_MA
 reg: CVUI4(reg)  "set 0xffff,%%g1; and %%%0,%%g1,%%%c\n"  2
 addrg: ADDRGP4        "%a"
 stmt:  JUMPV(addrg)  "br %0	#JUMPV\n"   1	/* jump to branch */
-stmt:  JUMPV(addr)   "jmp %0\n"  1
+stmt:  JUMPV(addr)   "br %0\n"  1
 stmt:  LABELV        "%a:\n"
 stmt: EQI4(reg,rc)  "cmp %%%0,%1; be %a\n"    2
 stmt: EQU4(reg,rc)  "cmp %%%0,%1; be %a\n"    2
