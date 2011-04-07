@@ -1,42 +1,24 @@
 #!/bin/bash -e
-cd ./lcc
-./rbld
-echo LCC build success
-cd ../
 
-make -C ./assembler clean 
-make -C ./assembler 
-echo Assembler build success
-
-make -C ./simulator clean
-make -C ./simulator
-echo Simulator build success
-
-
-if [ "$1" == "-C" ]
+if [ "$1" == "-B" ]
 then
-	folders=(source assembler object exec)
-	existFile(){
-		[[ -f "$1" ]] && echo $1 found || echo No $1 found
-	} 
-	existFolder(){
-		if [ -d "$1" ] 
-		then echo $1 folder found 
-		else {
-			echo No $1 found, creating $1
-		 	mkdir $1 
-		}
-		fi
-	} 
-	for temp in ${files[@]}
-	do
-		existFile $temp
-	done
-	for temp in ${folders[@]}
-	do
-		existFolder $temp
-	done
+    cd ./lcc
+    ./rbld
+    echo LCC build success
+    cd ../
+
+    make -C ./assembler clean 
+    make -C ./assembler 
+    echo Assembler build success
+
+    make -C ./simulator clean
+    make -C ./simulator
+    echo Simulator build success
 fi
+cp ./lcc/lcc ./
+cp ./assembler/assembler ./
+cp ./simulator/simulator ./
+
 
 cd ./source
 Files="./*.c"
