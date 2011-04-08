@@ -1,3 +1,4 @@
+#!/bin/bash -e
 VERSION=lcc
 
 exec_prefix=build	
@@ -152,12 +153,6 @@ make CC="$CC $CFLAGS" LD="$CC $CFLAGS" HOSTFILE=etc/$HOST.c lcc CFLAGS="'"-DLCCD
 
 #wtf??? что здесь ищет sparc и не находя его валит все
 #Check command "make CC="$CC $CFLAGS" LD="$CC $CFLAGS" HOSTFILE=etc/$HOST.c lcc CFLAGS="'"-DLCCDIR=\"$INSTALLLIBDIR/\""'""
-#a=$?
-#if [ $a != 0 ]
-#then
-#	echo Exit status $a
-#	exit
-#fi
 
 
 echo
@@ -170,12 +165,6 @@ make CC="$CC $CFLAGS" LD="$CC $CFLAGS" all
 
 #wtf??? что здесь ищет sparc и не находя его валит все
 #Check command "make CC="$CC $CFLAGS" LD="$CC $CFLAGS" all"
-#a=$?
-#if [ $a != 0 ]
-#then
-#	echo Exit status $a
-#	exit
-#fi
 
 
 echo
@@ -211,7 +200,7 @@ do
     chmod 775 $INSTALLBINDIR/$f
     ls -l $INSTALLBINDIR/$f $INSTALLBINDIR/$f-$VERSIONNUMBER
 done
-cp $INSTALL_BIN_DIR/lcc .
+cp $INSTALLBINDIR/lcc .
 
 echo
 echo Installing auxiliary programs and run-time libraries ...
