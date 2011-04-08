@@ -4,11 +4,9 @@
 #define PC_INCREASE_NEEDED true
 #define PC_INCREASE_NOT_NEEDED false
 
-inline word Get_add_code (word that) {return (~that + 1)&0xffff;}
-inline dword Get_add_code (dword that) {return (~that + 1)&0xffffffff;}
+inline word Get_add_code (word that) {return (~that + 1);}
+inline dword Get_add_code (dword that) {return (~that + 1);}
 
-//---------------------------------------------------------------------------------------------------------------
-//#include <iostream>
 //---------------------------------------------------------------------------------------------------------------
 using namespace std;
 //---------------------------------------------------------------------------------------------------------------
@@ -96,7 +94,7 @@ inline bool Translator::Perform_shift_inc_flags (word cmd)
 		/*0001*/case 0x1: _exe->LSR (d, b);	return true;
 		/*0010*/case 0x2: _exe->LSL8 (d, b);return true;
 		/*0011*/case 0x3: _exe->LSR8 (d, b);return true;
-		/*0100*/case 0x4: _exe->ASR (d, b);	return true;
+		/*0100*/case 0x4: _exe->ASL (d, b);	return true;
 		/*0101*/case 0x5: _exe->ASR (d, b);	return true;
 
 		/*0110*/case 0x6: Process_set_clr_flags (cmd); return true;
