@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
-if [ "$1" == "-B" ]
+if [ "$1" != "-B" ]
 then
     cd ./lcc
     ./rbld

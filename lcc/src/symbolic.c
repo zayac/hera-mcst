@@ -316,7 +316,7 @@ static Node I(gen)(Node p) {
 		default:
 			assert(0);
 		}
-		check(p);
+		//check(&p);
 		p->x.listed = 1;
 		n = visit(p, n);
 	}

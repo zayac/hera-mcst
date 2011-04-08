@@ -1,8 +1,5 @@
-#!/bin/bash
+#!/bin/bash -e
 export CC=gcc
-echo
-echo
-echo
 rm -rf /tmp/lcc/
 make clean
 ./BUILD-LCC.sh hera-unix
