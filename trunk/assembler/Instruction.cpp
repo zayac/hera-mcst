@@ -145,8 +145,8 @@ bool Instruction::isCallInstruction() const { return regex_match(str, exprOperCa
 bool Instruction::isMacroSetInstruction() const { return regex_match(str, exprOperMacroSet); }
 bool Instruction::isMacroCmpNegNot() const { return regex_match(str, exprOperMacroCmpNegNot); }
 bool Instruction::isMacroHaltFlags() const { return regex_match(str, exprOperMacroHaltFlags); }
-bool Instruction::isMacroForTwoInstructions() const { return regex_match(str, regex("^(set|cmp|neg|flags)")); }
-bool Instruction::isMacroForThreeInstructions() const { return regex_match(str, regex("^(not)")); }
+bool Instruction::isMacroForTwoInstructions() const { return regex_match(getOperation().get(), regex("((set)|(cmp)|(neg)|(flags))")); }
+bool Instruction::isMacroForThreeInstructions() const { return regex_match(getOperation().get(), regex("(not)")); }
 bool Instruction::isSection() const { return regex_match(str, exprOperSection); }
 
 bool Instruction::validateString() const
@@ -158,7 +158,7 @@ bool Instruction::validateString() const
             isMacroCmpNegNot() || isMacroHaltFlags();
 }
 
-vector<unsigned short int> Instruction::encode(unsigned cmd_counter)
+vector<unsigned short int> Instruction::encode(unsigned &cmd_counter)
 {
     instr_word = 0;
     static int stack = -1;
@@ -327,17 +327,18 @@ vector<unsigned short int> Instruction::encode(unsigned cmd_counter)
             else if (isBranchInstruction())
             {
                 int brnum = findBranch( getOperation().get());
+                map<string, unsigned> labels = Assembler::getInstance()->getLabels();
                 if (brnum != -1)
                 {
                     if( brnum < 15)
                     {
                         setValueByShift( 0x1, 12);
-                        setValueByShift( getNumFromArg(args[0]), 0);
+                        setValueByShift( labels.find(args[0])->second, 0);
                     }
                     else
                     {
                         setValueByShift( 0x0, 12);
-                        setValueByShift( 0x00ff & (getNumFromArg(args[0]) - cmd_counter) , 0);
+                        setValueByShift( 0x00ff & (labels.find(args[0])->second - cmd_counter) , 0);
                     }
                     if ((brnum % 15) == 0)
                         setValueByShift( 0x0, 8);
@@ -385,46 +386,51 @@ vector<unsigned short int> Instruction::encode(unsigned cmd_counter)
             }
             sprintf(d, "setlo %%r%i, %i", getNumFromArg(args[0]), getNumFromArg(args[1]) & 0xff);
             vector<unsigned short int> v = Instruction(d).encode(cmd_counter);
+            cmd_counter++;
             for (vector<unsigned short int>::iterator i = v.begin(); i != v.end(); i++)
                 result.push_back(*i);
             sprintf(d, "sethi %%r%i, %i", getNumFromArg(args[0]), getNumFromArg(args[1]) >> 8);
-            v = Instruction(d).encode(cmd_counter++);
+            v = Instruction(d).encode(cmd_counter);
             for (vector<unsigned short int>::iterator i = v.begin(); i != v.end(); i++)
                 result.push_back(*i);
         } else if (!getOperation().get().compare("cmp")) {
             char d[256];
             sprintf(d, "setc");
             vector<unsigned short int> v = Instruction(d).encode(cmd_counter);
+            cmd_counter++;
             for (vector<unsigned short int>::iterator i = v.begin(); i != v.end(); i++)
                 result.push_back(*i);
             sprintf(d, "sub %%r0, %%r%i, %%r%i", getNumFromArg(args[0]), getNumFromArg(args[1]));
-            v = Instruction(d).encode(cmd_counter++);
+            v = Instruction(d).encode(cmd_counter);
             for (vector<unsigned short int>::iterator i = v.begin(); i != v.end(); i++)
                 result.push_back(*i);
         } else if (!getOperation().get().compare("neg")) {
             char d[256];
             sprintf(d, "setc");
             vector<unsigned short int> v = Instruction(d).encode(cmd_counter);
+            cmd_counter++;
             for (vector<unsigned short int>::iterator i = v.begin(); i != v.end(); i++)
                 result.push_back(*i);
             sprintf(d, "sub %%r%i, %%r0, %%r%i", getNumFromArg(args[0]), getNumFromArg(args[1]));
-            v = Instruction(d).encode(cmd_counter++);
+            v = Instruction(d).encode(cmd_counter);
             for (vector<unsigned short int>::iterator i = v.begin(); i != v.end(); i++)
                 result.push_back(*i);
         } else if (!getOperation().get().compare("not")) {
             char d[256];
             sprintf(d, "set %%r13, 65535");
             vector<unsigned short int> v = Instruction(d).encode(cmd_counter);
+            cmd_counter++;
             for (vector<unsigned short int>::iterator i = v.begin(); i != v.end(); i++)
                 result.push_back(*i);
             sprintf(d, "xor %%r%i, %%r13, %%r%i", getNumFromArg(args[0]), getNumFromArg(args[1]));
-            v = Instruction(d).encode(cmd_counter++);
+            v = Instruction(d).encode(cmd_counter);
             for (vector<unsigned short int>::iterator i = v.begin(); i != v.end(); i++)
                 result.push_back(*i);
         } else if (!getOperation().get().compare("halt")) {
             char d[256];
             sprintf(d, "brr 0");
             vector<unsigned short int> v = Instruction(d).encode(cmd_counter);
+            cmd_counter++;
             for (vector<unsigned short int>::iterator i = v.begin(); i != v.end(); i++)
                 result.push_back(*i);
         } else if (!getOperation().get().compare("nop")) {
@@ -461,10 +467,11 @@ vector<unsigned short int> Instruction::encode(unsigned cmd_counter)
             char d[256];
             sprintf(d, "clrc");
             vector<unsigned short int> v = Instruction(d).encode(cmd_counter);
+            cmd_counter++;
             for (vector<unsigned short int>::iterator i = v.begin(); i != v.end(); i++)
                 result.push_back(*i);
             sprintf(d, "add %%r0, %%r%i, %%r0", getNumFromArg(args[0]));
-            v = Instruction(d).encode(cmd_counter++);
+            v = Instruction(d).encode(cmd_counter);
             for (vector<unsigned short int>::iterator i = v.begin(); i != v.end(); i++)
                 result.push_back(*i);
         }
