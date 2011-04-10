@@ -20,6 +20,8 @@ cp -R ./lcc/build ./build
 cp ./assembler/assembler ./asm
 cp ./simulator/simulator ./sim
 
+svn update
+
 for f in ./source/*.c
 do
 	echo -------------------$f
