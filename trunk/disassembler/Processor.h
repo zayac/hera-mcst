@@ -1,7 +1,4 @@
-//#include "Disasm.h"
-#include <iostream>
 #pragma once
-using std::ostream;
 const int MEM_SIZE = 65536;
 const int REG_NUM = 16;
 typedef unsigned int dword;
@@ -78,7 +75,7 @@ class Execution
 	virtual void End_circle() = 0;
 };
 
-/*class Executor :public Execution
+class Executor :public Execution
 {
     bool _pc_increase_needed;
 	word _reg[REG_NUM];         // Register file
@@ -114,7 +111,7 @@ public:
     /* Print some debugging information.
      * Only register file at the moment
      */ 
-   /* virtual void dump();
+    virtual void dump();
 
 	virtual void SETLO (reg_ind d, byte v);
 	virtual void SETHI (reg_ind d, byte v);
@@ -160,66 +157,12 @@ public:
 	virtual word Get_cur_cmd();
 	virtual void End_circle();
 
-};*/
-
-class Disasm : public Execution
-{
-    ostream &_out;
-    Memory* _mem;
-    int _PC;
-
-    public:
-    Disasm (ostream& out, Memory* mem);
-    virtual ~Disasm();
-
-    virtual void dump();
-	virtual void SETLO (reg_ind d, byte v);
-	virtual void SETHI (reg_ind d, byte v);
-
-	virtual void AND (reg_ind d, reg_ind a, reg_ind b);
-	virtual void OR (reg_ind d, reg_ind a, reg_ind b);
-	virtual void ADD (reg_ind d, reg_ind a, reg_ind b);
-	virtual void SUB (reg_ind d, reg_ind a, reg_ind b);
-	virtual void MULT (reg_ind d, reg_ind a, reg_ind b);
-	virtual void XOR (reg_ind d, reg_ind a, reg_ind b);
-
-	virtual void LSL (reg_ind d, reg_ind v);
-	virtual void LSR (reg_ind d, reg_ind v);
-	virtual void LSL8 (reg_ind d, reg_ind v);
-	virtual void LSR8 (reg_ind d, reg_ind v);
-	virtual void ASL (reg_ind d, reg_ind v);
-	virtual void ASR (reg_ind d, reg_ind v);
-
-	virtual void SETF (five_bits b);
-	virtual void CLRF (five_bits b);
-
-	virtual void SAVEF (reg_ind d);
-	virtual void RSTRF (reg_ind d);
-
-	virtual void INC (reg_ind d, byte v);
-	virtual void DEC (reg_ind d, byte v);
-
-	virtual void LOAD (reg_ind d, five_bits o, reg_ind b);
-	virtual void STORE (reg_ind d, five_bits o, reg_ind b);
-
-	virtual void BRANCH (half_byte c, reg_ind b);
-	virtual void BRANCHR (half_byte c, byte r);
-	virtual void SWI (half_byte i);
-	virtual void RTI();
-	virtual void RETURN();
-
-	virtual void CALL (byte s, reg_ind b);
-
-	virtual void Set_PC (word nval);
-	virtual bool Continue();
-	virtual word Get_cur_cmd();
-	virtual void End_circle();
 };
 
 
 class Translator
 {
-    Disasm* _exe;
+    Execution* _exe;
 
 	inline bool Perform_arithmetic (word cmd);          // Arithmetic instructions
 	inline bool Perform_shift_inc_flags (word cmd);
@@ -232,8 +175,8 @@ class Translator
 
 public:
     void Print_hex_cmd(word command);
-    Translator (Disasm* ex);
-    void Set_execution (Disasm* ex) {_exe = ex;}
+    Translator (Execution* ex);
+    void Set_execution (Execution* ex) {_exe = ex;}
     // Perform a single instruction
 	void Perform (word cmd);
     
