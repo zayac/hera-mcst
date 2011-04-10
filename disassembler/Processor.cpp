@@ -10,24 +10,50 @@ inline dword Get_add_code (dword that) {return (~that + 1);}
 //---------------------------------------------------------------------------------------------------------------
 using namespace std;
 //---------------------------------------------------------------------------------------------------------------
+void Translator::Print_hex_cmd(word command)
+{
+	word part_cmd;
+
+	cout << "0x";
+	for(int k=1; k<=(sizeof(word)*2); command<<=4, k++){
+		part_cmd = ((command & 0xf000)>>12);
+
+		switch (part_cmd)
+		{
+			case 0xa:cout<<'a';break;
+			case 0xb:cout<<'b';break;
+			case 0xc:cout<<'c';break;
+			case 0xd:cout<<'d';break;
+			case 0xe:cout<<'e';break;
+			case 0xf:cout<<'f';break;
+			default: cout<<part_cmd;
+		}
+	}
+	cout << "\t";
+//sleep(1);
+}
+//---------------------------------------------------------------------------------------------------------------
 void Translator::Run (word begin)
 {
     _exe->Set_PC (begin);
 	while (_exe->Continue())
-	{
+	{cout<<"|"<<_exe->Continue()<<"|"<<_exe->Get_cur_cmd()<<"|"<< _exe->_PC <<"|"<<endl;
 	    Perform (_exe->Get_cur_cmd());
         _exe->dump();
 		_exe->End_circle();
+sleep(1);
 	}
 
 }
 //---------------------------------------------------------------------------------------------------------------
-Translator::Translator (Execution* ex) :_exe (ex)
+Translator::Translator (Disasm* ex) :_exe (ex)
 {}
 //---------------------------------------------------------------------------------------------------------------
 void Translator::Perform (word cmd)
 {
 	half_byte opcode = (cmd >> 12)&0xf;
+
+	Print_hex_cmd(cmd);
 
 	if					(Perform_arithmetic (cmd)) return;
 	else if (opcode == 0x3){//0011
@@ -175,7 +201,7 @@ inline void Translator::Process_branch (word cmd)
 	}
 }
 //---------------------------------------------------------------------------------------------------------------
-Executor::Executor (Memory* mem)
+/*Executor::Executor (Memory* mem)
 :flags(0x10), SP(_reg[15]), FP (_reg[14]), TMP(_reg[13]), _mem (mem)
 {
     for (int i = 0; i < REG_NUM; i++)
@@ -258,7 +284,7 @@ void Executor::ADD (reg_ind d, reg_ind a, reg_ind b)
 	Correct_zero_sign (d);
 	overflow = carry = rez>>15;*/
 
-	dword rez = dword (_reg[a]) + dword (_reg[b]);
+/*	dword rez = dword (_reg[a]) + dword (_reg[b]);
 	_reg[d] = rez&0xffff;
 	Correct_zero_sign(d);
     overflow = ((0x1&(_reg[b]>>15)) == (0x1&(_reg[a]>>15)) && (0x1&(rez>>15)) != (0x1&(_reg[b]>>15)));
@@ -282,7 +308,7 @@ void Executor::SUB (reg_ind d, reg_ind a, reg_ind b)
 	Correct_zero_sign (d);
 	overflow = carry = rez>>15;*/
 
-	word antib = Get_add_code (_reg[b]);//conversion fo additional code
+/*	word antib = Get_add_code (_reg[b]);//conversion fo additional code
 
 	dword rez = dword (_reg[a]) + dword (antib);
 	_reg[d] = rez&0xffff;
@@ -311,7 +337,7 @@ void Executor::MULT (reg_ind d, reg_ind a, reg_ind b)
 	//carry not defined
 	//??? Where will be sign stored, if the register is set to reg[d] */
 
-	const word sign_mask = 0x8000;//1000 0000 0000 0000
+/*	const word sign_mask = 0x8000;//1000 0000 0000 0000
 	bool signa = (_reg[a]&sign_mask) >> 15;
 	bool signb = (_reg[b]&sign_mask) >> 15;
 	word aval = _reg[a]&0xffff;
@@ -487,7 +513,208 @@ void Executor::End_circle()
     if (_pc_increase_needed) ++PC;
     _pc_increase_needed = true;
     //dump();
+}*/
+Disasm::Disasm (ostream& out, Memory* mem):_out (out), _mem(mem)
+{
+    //ctor
 }
+//---------------------------------------------------------------------------------------------------------------
+Disasm::~Disasm()
+{
+    //dtor
+}
+//---------------------------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------
+void Disasm::SETLO (reg_ind d, byte v)
+{
+    _out <<"SETLO r" <<(int)d <<", " <<(int)v <<endl;
+}
+//---------------------------------------------------------------------------------------------------------------
+void Disasm::SETHI (reg_ind d, byte v)
+{
+    _out <<"SETHI r" <<(int)d <<", " <<(int)v <<endl;
+}
+//---------------------------------------------------------------------------------------------------------------
+void Disasm::AND (reg_ind d, reg_ind a, reg_ind b)
+{
+    _out <<"AND r" <<(int)d <<", r" <<(int)a <<", r" <<(int)b <<endl;
+}
+//---------------------------------------------------------------------------------------------------------------
+void Disasm::OR (reg_ind d, reg_ind a, reg_ind b)
+{
+    _out <<"OR r" <<(int)d <<", r" <<(int)a <<", r" <<(int)b <<endl;
+}
+//---------------------------------------------------------------------------------------------------------------
+void Disasm::ADD (reg_ind d, reg_ind a, reg_ind b)
+{
+    _out <<"ADD r" <<(int)d <<", r" <<(int)a <<", r" <<(int)b <<endl;
+}
+//---------------------------------------------------------------------------------------------------------------
+void Disasm::SUB (reg_ind d, reg_ind a, reg_ind b)
+{
+    _out <<"SUB r" <<(int)d <<", r" <<(int)a <<", r" <<(int)b <<endl;
+}
+//---------------------------------------------------------------------------------------------------------------
+void Disasm::MULT (reg_ind d, reg_ind a, reg_ind b)
+{
+    _out <<"MULT r" <<(int)d <<", r" <<(int)a <<", r" <<(int)b <<endl;
+}
+//---------------------------------------------------------------------------------------------------------------
+void Disasm::XOR (reg_ind d, reg_ind a, reg_ind b)
+{
+    _out <<"XOR r" <<(int)d <<", r" <<(int)a <<", r" <<(int)b <<endl;
+}
+//---------------------------------------------------------------------------------------------------------------
+void Disasm::LSL (reg_ind d, reg_ind v)
+{
+    _out <<"LSL r" <<(int)d <<", r" <<(int)v <<endl;
+}
+//---------------------------------------------------------------------------------------------------------------
+void Disasm::LSR (reg_ind d, reg_ind v)
+{
+    _out <<"LSR r" <<(int)d <<", r" <<(int)v <<endl;
+}
+//---------------------------------------------------------------------------------------------------------------
+void Disasm::LSL8 (reg_ind d, reg_ind v)
+{
+    _out <<"LSL8 r" <<(int)d <<", r" <<(int)v <<endl;
+}
+//---------------------------------------------------------------------------------------------------------------
+void Disasm::LSR8 (reg_ind d, reg_ind v)
+{
+    _out <<"LSR8 r" <<(int)d <<", r" <<(int)v <<endl;
+}
+//---------------------------------------------------------------------------------------------------------------
+void Disasm::ASL (reg_ind d, reg_ind v)
+{
+    _out <<"ASL r" <<(int)d <<", r" <<(int)v <<endl;
+}
+//---------------------------------------------------------------------------------------------------------------
+void Disasm::ASR (reg_ind d, reg_ind v)
+{
+    _out <<"ASR r" <<(int)d <<", r" <<(int)v <<endl;
+}
+//---------------------------------------------------------------------------------------------------------------
+void Disasm::SETF (five_bits b)
+{
+    _out <<"SETF " <<(int)b <<endl;
+}
+//---------------------------------------------------------------------------------------------------------------
+void Disasm::CLRF (five_bits b)
+{
+    _out <<"CLRF " <<(int)b <<endl;
+}
+//---------------------------------------------------------------------------------------------------------------
+void Disasm::SAVEF (reg_ind d)
+{
+    _out <<"SAVEF r" <<(int)d <<endl;
+}
+//---------------------------------------------------------------------------------------------------------------
+void Disasm::RSTRF (reg_ind d)
+{
+    _out <<"RSTRF r" <<(int)d <<endl;
+}
+//---------------------------------------------------------------------------------------------------------------
+void Disasm::INC (reg_ind d, byte v)
+{
+    _out <<"INC r" <<(int)d <<", " <<(int)v <<endl;
+}
+//---------------------------------------------------------------------------------------------------------------
+void Disasm::DEC (reg_ind d, byte v)
+{
+    _out <<"DEC r" <<(int)d <<", " <<(int)v <<endl;
+}
+//---------------------------------------------------------------------------------------------------------------
+void Disasm::LOAD (reg_ind d, five_bits o, reg_ind b)
+{
+    _out <<"LOAD r" <<(int)d <<", " <<(int)o <<", r" <<(int)b <<endl;
+}
+//---------------------------------------------------------------------------------------------------------------
+void Disasm::STORE (reg_ind d, five_bits o, reg_ind b)
+{
+    _out <<"STORE r" <<(int)d <<", " <<(int)o <<", r" <<(int)b <<endl;
+}
+//---------------------------------------------------------------------------------------------------------------
+//--
+char* Get_code (half_byte c)
+{
+    switch (c)
+    {
+        case 0b0000: return "BR";
+        case 0b0010: return "BL";
+        case 0b0011: return "BGE";
+        case 0b0100: return "BLE";
+        case 0b0101: return "BG";
+        case 0b0110: return "BULE";
+        case 0b0111: return "BUG";
+
+        case 0b1000: return "BZ";
+        case 0b1001: return "BNZ";
+        case 0b1010: return "BC";
+        case 0b1011: return "BNC";
+        case 0b1100: return "BS";;
+        case 0b1101: return "BNS";
+        case 0b1110: return "BV";
+        case 0b1111: return "BNV";
+    };
+}
+//---------------------------
+void Disasm::BRANCH (half_byte c, reg_ind b)
+{
+    _out <<Get_code (c) <<" r" <<(int)b <<endl;
+}
+//---------------------------------------------------------------------------------------------------------------
+void Disasm::BRANCHR (half_byte c, byte r)
+{
+    if (c == 0 && r == 0) return;//!!!may be not???
+    _out <<Get_code (c) <<"R " <<(int)(char)r <<endl;
+}
+//---------------------------------------------------------------------------------------------------------------
+void Disasm::SWI (half_byte i)
+{
+    _out <<"SWI " <<(int)i <<endl;
+}
+//---------------------------------------------------------------------------------------------------------------
+void Disasm::RTI()
+{
+    _out <<"RTI" <<endl;
+}
+//---------------------------------------------------------------------------------------------------------------
+void Disasm::RETURN()
+{
+    _out <<"RETURN" <<endl;
+}
+//---------------------------------------------------------------------------------------------------------------
+void Disasm::CALL (byte s, reg_ind b)
+{
+    _out <<"CALL "<<(int)s <<", r" <<(int)b <<endl;
+}
+//---------------------------------------------------------------------------------------------------------------
+void Disasm::Set_PC (word nval)
+{
+    _PC = nval;
+}
+//---------------------------------------------------------------------------------------------------------------
+bool Disasm::Continue()
+{
+    return ( (_PC < 0xffff) && _out.good()) && (_PC != 0);
+}
+//---------------------------------------------------------------------------------------------------------------
+word Disasm::Get_cur_cmd()
+{
+    return _mem->Get (_PC);
+}
+//---------------------------------------------------------------------------------------------------------------
+void Disasm::End_circle()
+{
+    _PC++;
+    if (_PC > 0xffff) _PC = 0xffff;
+}
+
+void Disasm::dump()
+{
+}
+//---------------------------------------------------------------------------------------------------------------
 
 //---------------------------------------------------------------------------------------------------------------
 //---------------------------------------------------------------------------------------------------------------

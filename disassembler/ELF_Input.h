@@ -1,5 +1,3 @@
-
-
 #ifndef ELF_INPUT_H_
 #define ELF_INPUT_H_
 
@@ -31,7 +29,4 @@ public:
 	virtual ~ELF_Input();
 };*/
 
-
 #endif /* ELF_INPUT_H_ */
-
-
