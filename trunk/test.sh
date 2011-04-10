@@ -20,7 +20,7 @@ cp -R ./lcc/build ./build
 cp ./assembler/assembler ./asm
 cp ./simulator/simulator ./sim
 
-#svn commit -m "New message from commit"
+svn commit -m "New message from commit"
 
 for f in ./source/*.c
 do
