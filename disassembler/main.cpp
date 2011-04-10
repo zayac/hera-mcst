@@ -9,7 +9,7 @@
 #include "ELFWriter.h"
 #include "ELFReader.h"
 //#include "Processor.h"
-#include "Processor.h"
+#include "Disasm.h"
 #include <fstream>
 #include <cstring>
 
