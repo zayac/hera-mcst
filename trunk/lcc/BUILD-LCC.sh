@@ -275,14 +275,7 @@ fi
 for f in doc/*.1
 do
     g=`basename $f`
-    chmod 777 $INSTALLMANDIR/cat1/$g 2>/dev/null
-    $RM $INSTALLMANDIR/cat1/$g
-    chmod 777 $INSTALLMANDIR/man1/$g 2>/dev/null
-    $RM $INSTALLMANDIR/man1/$g
     $CP $f $INSTALLMANDIR/man1/$g
     chmod 664 $INSTALLMANDIR/man1/$g
     /bin/ls -l $INSTALLMANDIR/man1/$g
 done
-
-echo
-echo "вроде как что-то работает...  DZ"
