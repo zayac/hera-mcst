@@ -22,9 +22,10 @@ void Assembler::run(string s)
     open(s);
     Instruction str;
     string tmps;
-    unsigned lineCounter = 1;
-    pc = 1;
+    unsigned lineCounter = 0;
+    pc = 0;
     bool failbit = false;
+    cout << "<< Labels >>" << endl;
     while(!ifile.eof())
     {
         getline(ifile, tmps);
@@ -35,7 +36,7 @@ void Assembler::run(string s)
             {
             	if (labels.find(str.getString()) == labels.end())
                 {
-                    // cout << str.getString() << " " << pc << endl;
+                    cout << str.getString() << " " << pc << endl;
                     string s1 = str.getString();
                     labels.insert(pair<string, unsigned>(s1.substr(0, s1.length() - 1), pc));
                 }
@@ -48,8 +49,11 @@ void Assembler::run(string s)
             else if (!str.isEmpty())
             {
                 asmInstrs.push_back(str);
+                //cout << str.getString() << " : " << str.isMacroForTwoInstructions() << endl;
                 if(str.isMacroForTwoInstructions())
+                {
                         pc += 2;
+                }
                 else if (str.isMacroForThreeInstructions())
                         pc +=3;
                 else
@@ -74,11 +78,14 @@ void Assembler::run(string s)
 
     ifile.close();
 
-    pc = 1;
+    cout << "<< Instructions >>" << endl;
+    pc = 0;
     for (vector<Instruction>::iterator instr = asmInstrs.begin(); instr != asmInstrs.end(); instr++)
     {
     	//cout <<  instr->getString() << endl;
-    	vector<unsigned short int> ret = instr->encode(pc++);
+        //cout << pc << endl;
+    	vector<unsigned short int> ret = instr->encode(pc);
+        pc++;
     	for (vector<unsigned short int>::iterator i = ret.begin(); i != ret.end(); i++)
     	{
             encodedInstructions.push_back(*i);

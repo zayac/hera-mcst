@@ -53,7 +53,7 @@ public:
     bool validateString() const ;					// checks if an instruction string is correct
     string inline getString() const { return str; }
     unsigned short int getInstructionWord() const { return instr_word; }
-    vector<unsigned short int> encode(unsigned cmd_counter);
+    vector<unsigned short int> encode(unsigned &cmd_counter);
 
     /*
      * optional<string> is used for setting a "null" string
