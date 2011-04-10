@@ -15,30 +15,23 @@ then
     make -C ./simulator
     echo Simulator build success
 fi
-cp ./lcc/lcc ./
-cp ./assembler/assembler ./
-cp ./simulator/simulator ./
+cp ./lcc/lcc ./compiler
+cp -R ./lcc/build ./build
+cp ./assembler/assembler ./asm
+cp ./simulator/simulator ./sim
 
-
-cd ./source
-Files="./*.c"
-
-for f in $Files 
+for f in ./source/*.c
 do
-	echo $OPTIND 
-	echo $f
-	cd ../lcc
-	./lcc -S ../source/$f
-	#nameAsm=$(echo $f|sed 's/\(.*\)\.c/\1.s/')
-	#cd ./object	
-	#../${files[1]} ../assembler/$nameAsm
-	#echo make asm
-	#cd ../
-	#cd ./exec
-	#nameObj=$(echo $f|sed 's/\(.*\)\.c/\1.o/')
-	#../${files[2]} ../object/$nameObj
-	#echo execute
-	#cd ../ 
+	echo -------------------$f
+	nameAsm=$(echo $f|sed 's/\(.*\)\.c/\1.s/')
+	nameObj=$(echo $f|sed 's/\(.*\)\.c/\1.o/')
+	#echo -------------------$nameAsm
+	#echo -------------------$nameObj
+	./compiler -S $f -o $nameAsm
+	cd ./source
+	../asm ../$nameAsm
+	cd ../
+	#./sim $nameObj
 done
  
 

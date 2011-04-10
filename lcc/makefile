@@ -212,8 +212,6 @@ clean::		testclean
 		$(RM) $Bhera.c
 		$(RM) $Brcc1$E $Brcc1$E $B1rcc$E $B2rcc$E
 		$(RM) $B*.ilk
-		$(RM) -R /usr/tmp/*
-
 clobber::	clean
 		$(RM) $Brcc$E $Blburg$E $Bcpp$E $Blcc$E $Bcp$E $Bbprint$E $B*$A
 		$(RM) $B*.pdb $B*.pch
