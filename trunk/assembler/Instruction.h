@@ -5,6 +5,7 @@
 #include <boost/regex.hpp>
 #include <boost/optional/optional.hpp>
 #include "Assembler.h"
+#include <iomanip>
 
 using namespace std;
 using namespace boost;
