@@ -124,7 +124,7 @@ void Disasm::STORE (reg_ind d, five_bits o, reg_ind b)
 }
 //---------------------------------------------------------------------------------------------------------------
 //--
-char* Get_code (half_byte c)
+const char* Get_code (half_byte c)
 {
     switch (c)
     {
