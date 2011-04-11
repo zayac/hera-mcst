@@ -12,7 +12,7 @@ class Assembler;
 regex Instruction::exprOperSection("^\\.[A-Za-z]+ [\x21-\x7E]*$");
 regex Instruction::exprLabel("^[A-Za-z_.][A-Za-z0-9_.]*:$");
 regex Instruction::exprReducedLabel("^[A-Za-z_.][A-Za-z0-9_.]*$");
-regex Instruction::exprOperation("([A-Za-z])+");
+regex Instruction::exprOperation("([A-Za-z0-9])+");
 regex Instruction::exprArguments("((%r[0-9]{1,2})|(%fp))|([+-]?[0-9]+)");
 regex Instruction::exprDecimalNumber("[+-]?[0-9]+");
 regex Instruction::exprRegister("(%r[0-9]{1,2})|(%fp)");
@@ -38,7 +38,7 @@ Instruction::Instruction(string str) : str(str)
     cleanInstruction();
     for(int i = 0; i < str.length(); i++) str[i] = tolower(str[i]);
     string branches[] = { "br", "bl",  "bge",  "ble",  "bg",  "bule",  "bug",  "bz",  "bnz",  "bc",  "bnc",  "bs",  "bns",  "bv",  "bnv",
-                         "BRR", "blr", "bger", "bler", "bgr", "buler", "bugr", "bzr", "bnzr", "bcr", "bncr", "bsr", "bnsr", "bvr", "bnvr" };
+                         "brr", "blr", "bger", "bler", "bgr", "buler", "bugr", "bzr", "bnzr", "bcr", "bncr", "bsr", "bnsr", "bvr", "bnvr" };
     this->branches.insert(this->branches.begin(), branches, branches + 30);
 }
 Instruction::Instruction() { str = ""; }
@@ -105,7 +105,7 @@ vector<string> Instruction::getArguments() const
             ret.push_back(string(itr->first, itr->second));
         }
     } else {
-        sregex_token_iterator itr(str.begin(), str.end(), exprArguments, 0);
+        sregex_token_iterator itr(str.begin() + str.find_first_of(" "), str.end(), exprArguments, 0);
         for(; itr != end; ++itr)
         {
             if (string(itr->first, itr->second).compare("%fp"))
@@ -164,7 +164,7 @@ vector<unsigned short int> Instruction::encode(unsigned &cmd_counter)
     static int stack = -1;
     stack++;
     for(int i = 0; i < stack; i++) cout << "\t";
-    cout << getString();
+    cout  << getString();
     vector<string> args = getArguments();
     vector<unsigned short int> result;
     if (!isMacroInstruction())
@@ -243,7 +243,7 @@ vector<unsigned short int> Instruction::encode(unsigned &cmd_counter)
             setValueByShift( getNumFromArg(args[0]), 8);
             setValueByShift( 0x2, 4);
             setValueByShift( getNumFromArg(args[1]), 0);
-                result.push_back(instr_word);
+            result.push_back(instr_word);
         } else if (!getOperation().get().compare("lsr8")) {
             setValueByShift( 0x3, 12);
             setValueByShift( getNumFromArg(args[0]), 8);
@@ -361,7 +361,7 @@ vector<unsigned short int> Instruction::encode(unsigned &cmd_counter)
                 setValueByShift( getNumFromArg(args[1]), 0);
                 result.push_back(instr_word);
             }
-            if (result.size() == 1) cout << "\t\t\t" << result[0] << endl;
+            if (result.size() == 1) cout << "\t\t0x" << hex << result[0] << endl;
     }
     else {
         cout << endl;
