@@ -680,6 +680,9 @@ static void target(Node p) {
 				setreg(p, ireg[p->syms[RX]->u.c.v.i]);
 			}
 			break;
+	        case CALL+I: case CALL+P: case CALL+U: case CALL+V:
+			setreg(p, ireg[1]);
+			break;
 	}
 }
 
