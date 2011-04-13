@@ -16,15 +16,41 @@ int main(int argc, char** argv)
 {
     if (argc == 1)
     {
-        cout << "There should be at least one file name argument" << endl;
+        cout << "There should be at least the file name argument" << endl;
         return 0;
     }
     int i = 0;
     Assembler* assemb = Assembler::getInstance();
-    while(argv[++i])
+    bool objectFileTypeIsSet = false;
+    for(i = 2; i < argc; i++)
     {
-    	assemb->run(argv[i]);
+        if (string(argv[i]) == "--mif" )
+        {
+            assemb->setObjectFileType(Assembler::MIF);
+            if(!objectFileTypeIsSet)
+                objectFileTypeIsSet = true;
+            else
+                cout << "Duplicate object file type detected: " << argv[i] << endl;
+        }
+        else if(string(argv[i]) == "--elf")
+        {
+            assemb->setObjectFileType(Assembler::ELF);
+            if(!objectFileTypeIsSet)
+                objectFileTypeIsSet = true;
+            else
+                cout << "Duplicate object file type detected: " << argv[i] << endl;
+        }
     }
-    assemb->writeToFile();
+
+    ifstream ifile(argv[1]);
+    if (ifile) {
+        assemb->run(argv[1]);
+        assemb->writeToFile();
+    }
+    else
+    {
+        cout << "File " << argv[i] << "doesn't exist" << endl;
+    }
+
 }
 

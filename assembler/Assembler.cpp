@@ -4,8 +4,10 @@
 
 int Assembler::BUFFER_SIZE = 32768;
 Assembler* Assembler::instance = NULL;
-Assembler::Assembler()
+
+Assembler::Assembler(OutputFileType fileType)
 {
+    objectFile = fileType;
 }
 void Assembler::open(string str)
 {
@@ -25,7 +27,6 @@ void Assembler::run(string s)
     unsigned lineCounter = 0;
     pc = 0;
     bool failbit = false;
-    cout << "<< Labels >>" << endl;
     while(!ifile.eof())
     {
         getline(ifile, tmps);
@@ -105,12 +106,27 @@ void Assembler::writeToFile()
         cout << "Error in file " << filename << endl;
     }
 
+    if(objectFile == ELF)
+        writeToFileELF(name, encodedInstructions);
+    else if (objectFile == MIF)
+        writeToFileMIF(name, encodedInstructions);
+}
+
+
+void Assembler::writeToFileELF(string filename, vector<unsigned short int>instrs)
+{
     ELFWriter to;
     ELF_Output out;
     unsigned short int a[BUFFER_SIZE];
-	copy( encodedInstructions.begin(), encodedInstructions.end(), a);
+	copy( instrs.begin(), instrs.end(), a);
 
-    out.open(name.c_str(), ios_base::binary);
+    out.open(filename.c_str(), ios_base::binary);
     to.Write (&out, a, sizeof (a));
     out.close();
+}
+
+void Assembler::writeToFileMIF(string filename, vector<unsigned short int>instrs)
+{
+    MIF_Output mif;
+    mif.generateObjectFile<unsigned short int>(filename, instrs);
 }
