@@ -1,4 +1,4 @@
-void sub();
+int sub();
 int main()
 {
 	int a = 1;
