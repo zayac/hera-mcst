@@ -3,16 +3,23 @@
 
 #include <vector>
 #include <map>
-#include "Instruction.h"
 #include <string>
+#include <iostream>
+#include <fstream>
 #include "ELFReader.h"
+#include "Instruction.h"
+#include "MIF_Output.h"
 
 using namespace std;
 
 class Instruction;
 
+
 class Assembler
 {
+public:
+    enum OutputFileType { ELF, MIF };
+private:
     string filename;
     unsigned pc;
     vector<unsigned short int> encodedInstructions;
@@ -22,8 +29,13 @@ class Assembler
     void open(string ifile);					    // stands just for output file
     static int BUFFER_SIZE;
     static Assembler* instance;
-    Assembler();
+    OutputFileType objectFile;
+    Assembler(OutputFileType fileType = ELF);
+    void writeToFileELF(string filename, vector<unsigned short int>instrs);
+    void writeToFileMIF(string filename, vector<unsigned short int>instrs);
 public:
+    inline OutputFileType getObjectFileType() const { return objectFile; }
+    inline void setObjectFileType(OutputFileType type) { objectFile = type; }
     static Assembler* getInstance()
     {
         if (instance == NULL)
