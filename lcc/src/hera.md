@@ -423,7 +423,8 @@ base: ADDU4(reg,con13)  "%%%0+%1"
 base: reg    "%%%0"
 base: con13  "%0"
 base: stk13  "%%fp,%0"
-addr: base           "%0"
+addr: base           "0,%0"
+addrct: base           "%0"
 addr: ADDI2(reg,reg)  "%%%0+%%%1"
 addr: ADDI4(reg,reg)  "%%%0+%%%1"
 addr: ADDP2(reg,reg)  "%%%0+%%%1"
@@ -436,7 +437,7 @@ reg:  INDIRI2(addr)     "load %%%c,%0	#INDIRI2\n"  1	/*it's correct */
 reg:  INDIRP2(addr)     "load %%%c,%0	#INDIRP2\n"  1
 reg:  INDIRI4(addr)     "load [%0],%%%c\n"    1
 reg:  INDIRU1(addr)     "ldub [%0],%%%c\n"  1
-reg:  INDIRU2(addr)     "lduh [%0],%%%c\n"  1
+reg:  INDIRU2(addr)     "load %%%c,%0   #INDIRU2\n"  1
 reg:  INDIRU4(addr)     "ld [%0],%%%c\n"    1
 reg:  INDIRP2(addr)     "ld %%%c,%0  \n"    1
 reg:  INDIRP4(addr)     "ld [%0],%%%c\n"    1
@@ -447,7 +448,7 @@ stmt: ASGNI4(addr,reg)  "st %%%1,[%0]\n"    1
 stmt: ASGNU1(addr,reg)  "stb %%%1,[%0]\n"   1
 stmt: ASGNU2(addr,reg)  "store %%%1,%0\n"   1
 stmt: ASGNU4(addr,reg)  "st %%%1,[%0]\n"    1
-stmt: ASGNP2(addr,reg)  "st %%%1,[%0]\n"    1
+stmt: ASGNP2(addr,reg)  "store %%%1,%0\n"    1
 stmt: ASGNP4(addr,reg)  "st %%%1,[%0]\n"    1
 stmt: ASGNF4(addr,reg)  "st %%f%1,[%0]\n"   1
 addrl: ADDRLP4            "%%%fp+%a"          imm(a)
@@ -487,9 +488,9 @@ rc: con13  "%0"
 rc: reg    "%%%0"
 reg: ADDI2(reg,rc)   "add %%%c,%%%0,%1	#ADDI2\n"  1	/* addition for int */
 reg: ADDI4(reg,rc)   "add %%%0,%1,%%%c\n"  1
-reg: ADDP2(reg,rc)   "add %%%0,%1,%%%c\n"  1
+reg: ADDP2(reg,rc)   "add %%%c,%%%0,%1  #ADDP2\n"  1
 reg: ADDP4(reg,rc)   "add %%%0,%1,%%%c\n"  1
-reg: ADDU2(reg,rc)   "add %%%0,%1,%%%c\n"  1
+reg: ADDU2(reg,rc)   "add %%%c,%%%0,%1  #ADDU2\n"  1
 reg: ADDU4(reg,rc)   "add %%%0,%1,%%%c\n"  1
 reg: BANDI4(reg,rc)  "and %%%0,%1,%%%c\n"  1
 reg: BORI4(reg,rc)   "or %%%0,%1,%%%c\n"   1
@@ -500,7 +501,7 @@ reg: BXORU4(reg,rc)  "xor %%%0,%1,%%%c\n"  1
 reg: SUBI2(reg,rc)   "sub %%%c,%%%0,%1	#SUBI2\n"  1	/* substraction for int */
 reg: SUBI4(reg,rc)   "sub %%%0,%1,%%%c\n"  1
 reg: SUBP4(reg,rc)   "sub %%%0,%1,%%%c\n"  1
-reg: SUBU2(reg,rc)   "sub %%%0,%1,%%%c\n"  1
+reg: SUBU2(reg,rc)   "sub %%%c,%%%0,%1  #SUBU2\n"  1
 reg: SUBU4(reg,rc)   "sub %%%0,%1,%%%c\n"  1
 rc5: CNSTI4  "%a"    range(a, 0, 31)
 rc5: reg    "%%%0"
@@ -526,7 +527,7 @@ reg: CVUI4(reg)  "and %%%0,0xff,%%%c\n" (a->syms[0]->u.c.v.i == 1 ? 1 : LBURG_MA
 reg: CVUI4(reg)  "set 0xffff,%%g1; and %%%0,%%g1,%%%c\n"  2
 addrg: ADDRGP4        "%a"
 stmt:  JUMPV(addrg)  "br %0	#JUMPV\n"   1	/* jump to branch */
-stmt:  JUMPV(addr)   "br %0\n"  1
+stmt:  JUMPV(addrct)   "br %0\n"  1
 stmt:  LABELV        "%a:\n"
 stmt: EQI4(reg,rc)  "cmp %%%0,%1; be %a\n"    2
 stmt: EQU4(reg,rc)  "cmp %%%0,%1; be %a\n"    2
