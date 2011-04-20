@@ -12,13 +12,13 @@
 #include <vector>
 #include <iostream>
 #include <fstream>
-
+#include <iomanip>
 using namespace std;
 
 class MIF_Output {
 public:
     enum radix { BIN, DEC, HEX, OCT, UNS };
-    MIF_Output(unsigned depth = 16, unsigned width = 16, enum radix address = HEX, enum radix data = HEX);
+    MIF_Output(unsigned depth = 16, unsigned width = 1024, enum radix address = HEX, enum radix data = HEX);
     
     template <class T>
     void generateObjectFile(string fileName, vector<T> instructions);
@@ -77,9 +77,9 @@ void MIF_Output::generateObjectFile(string fileName, vector<T> instructions)
     ofile << "BEGIN" << endl;
     for(unsigned i = 0; i < instructions.size(); i ++)
     {
-        ofile << hex << i * width << "\t:\t";
+        ofile << hex << setfill ('0') << setw (4) << i  << "\t:\t";
         if (data == HEX)
-            ofile << hex << instructions[i];
+            ofile << setfill ('0') << setw (4) << hex << instructions[i];
         else if (data == DEC)
             ofile << dec << instructions[i];
         else if (data == OCT)
@@ -95,7 +95,7 @@ void MIF_Output::generateObjectFile(string fileName, vector<T> instructions)
                 result[--index] = '0' + (n & 1);
             } while (n >>= 1);
 
-            ofile << std::string(result + index, result + size);
+            ofile <<  std::string(result + index, result + size);
         }
         ofile << ";" << endl;
     }

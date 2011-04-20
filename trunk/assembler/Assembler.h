@@ -31,6 +31,7 @@ private:
     static Assembler* instance;
     OutputFileType objectFile;
     Assembler(OutputFileType fileType = ELF);
+    vector<unsigned short int> registerValues;
     void writeToFileELF(string filename, vector<unsigned short int>instrs);
     void writeToFileMIF(string filename, vector<unsigned short int>instrs);
 public:

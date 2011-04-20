@@ -77,6 +77,7 @@ public:
     bool isLoadStoreInstruction() const;				// check if an instruction is a load/store instruction
     bool isBranchInstruction() const;					// check if an instruction is a branch instruction
     bool isReturnInstruction() const;					// check if an instruction is a return instruction
+    bool isRegister() const;
     bool isSwiInstruction() const;						// check if an instruction is a software interrupt instruction
     bool isCallInstruction() const;						// check if an instruction is a call instruction
     bool isMacroSetInstruction() const;					// check if an instruction is a macro set instruction

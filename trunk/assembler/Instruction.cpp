@@ -23,7 +23,7 @@ regex Instruction::exprOperSetClearFlags("^(setf|clrf) ((%r[0-9]{1,2})|(%fp))", 
 regex Instruction::exprOperSaveRestoreFlags("^(save|rstrf) ((%r[0-9]{1,2})|(%fp))", regex_constants::icase);
 regex Instruction::exprOperIncDecFlag("^(inc|dec) ((%r[0-9]{1,2})|(%fp)) *, *(((%r[0-9]{1,2})|(%fp))|([0-9]+))", regex_constants::icase);
 regex Instruction::exprOperLoadStore("^(load|store) ((%r[0-9]{1,2})|(%fp)) *, *([0-9]{1,2}) *, *((%r[0-9]{1,2})|(%fp))", regex_constants::icase);
-regex Instruction::exprOperBranch("^(brr?|blr?|bger?|bler?|bgr?|buler?|bugr?|bzr?|bnzr?|bcr?|bncr?|bsr?|bnsr?|bvr?|bnvr?) ([A-Za-z_.])([A-Za-z0-9_.])*", regex_constants::icase);
+regex Instruction::exprOperBranch("^(brr?|blr?|bger?|bler?|bgr?|buler?|bugr?|bzr?|bnzr?|bcr?|bncr?|bsr?|bnsr?|bvr?|bnvr?) ((([A-Za-z_.])([A-Za-z0-9_.])*)|((%r[0-9]{1,2})|(%fp)))", regex_constants::icase);
 regex Instruction::exprOperReturn("^(return|rti)", regex_constants::icase);
 regex Instruction::exprOperSwi("^(swi) [0-9]+", regex_constants::icase);
 regex Instruction::exprOperCall("^(call) ((%r[0-9]{1,2})|(%fp)) *, *[0-9]+", regex_constants::icase);
@@ -95,7 +95,7 @@ vector<string> Instruction::getArguments() const
     sregex_token_iterator end;
     if (isBranchInstruction())
     {
-        regex brregex("([A-Za-z_.])([A-Za-z0-9_.])*");
+        regex brregex("%?([A-Za-z_.])([A-Za-z0-9_.])*");
         sregex_token_iterator itr(str.begin(), str.end(), brregex, 0);
         for(itr++; itr != end; ++itr) ret.push_back(string(itr->first, itr->second));
     } if (isMacroSetInstruction() || isSetInstruction()) {
@@ -128,6 +128,7 @@ short Instruction::getNumFromArg(string str)
         return -1;
 }
 
+bool Instruction::isRegister() const { return regex_match(str, exprRegister); }
 bool Instruction::isEmpty() const { return regex_match(str, regex("")); }
 bool Instruction::isLabel() const { return regex_match(str, exprLabel); }
 bool Instruction::isReducedLabel() const { return regex_match(str, exprReducedLabel); }
@@ -333,6 +334,7 @@ vector<unsigned short int> Instruction::encode(unsigned &cmd_counter)
                     if( brnum < 15)
                     {
                         setValueByShift( 0x1, 12);
+                        cout << "!" << Instruction(args[0]).isRegister() << "!" << endl;
                         setValueByShift( labels.find(args[0])->second, 0);
                     }
                     else

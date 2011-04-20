@@ -8,6 +8,7 @@ Assembler* Assembler::instance = NULL;
 Assembler::Assembler(OutputFileType fileType)
 {
     objectFile = fileType;
+    registerValues = vector<unsigned short int>(16, 0);
 }
 void Assembler::open(string str)
 {
