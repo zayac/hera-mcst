@@ -86,11 +86,12 @@ void Assembler::run(string s)
     {
     	//cout <<  instr->getString() << endl;
         //cout << pc << endl;
-    	vector<unsigned short int> ret = instr->encode(pc);
+    	vector< pair <unsigned short int, string> > ret = instr->encode(pc);
         pc++;
-    	for (vector<unsigned short int>::iterator i = ret.begin(); i != ret.end(); i++)
+    	for (vector<pair <unsigned short int, string> >::iterator i = ret.begin(); i != ret.end(); i++)
     	{
-            encodedInstructions.push_back(*i);
+            encodedInstructions.push_back(i->first);
+            instructionStrings.push_back(i->second);
             //cout << "\t" << *i << endl;
     	}
     }
@@ -129,5 +130,5 @@ void Assembler::writeToFileELF(string filename, vector<unsigned short int>instrs
 void Assembler::writeToFileMIF(string filename, vector<unsigned short int>instrs)
 {
     MIF_Output mif;
-    mif.generateObjectFile<unsigned short int>(filename, instrs);
+    mif.generateObjectFile<unsigned short int>(filename, instrs, instructionStrings);
 }
