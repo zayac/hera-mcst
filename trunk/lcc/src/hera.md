@@ -539,7 +539,7 @@ stmt: LEI4(reg,rc)  "cmp %%%0,%1; ble %a\n"   2
 stmt: LEI2(reg,rc)  "cmp %%%0,%1	#LEI2\nble %a	#LEI2\n"   2	/* lesser or equal branch for int */
 stmt: GEI2(reg,rc)  "cmp %%%0,%1	#GEI2\nbge %a	#GEI2\n"   2	/* greater or equal branch for int */
 stmt: GTI2(reg,rc)  "cmp %%%0,%1	#GTI2\nbg %a	#GTI2\n"   2	/* greater branch for int */
-stmt: LTI2(reg,rc)  "cmp %%%0,%1	#LTI2\nbl %a	#LTI2\n"   2	/* lesser branch for int */
+stmt: LTI2(reg,rc)  "cmp %%%0,%1	#LTI2\nblr %a	#LTI2\n"   2	/* lesser branch for int */
 stmt: NEI2(reg,rc)  "cmp %%%0,%1	#NEI2\nbnz %a	#NEI2\n"    2	/* not equal branch for int */
 stmt: EQI2(reg,rc)  "cmp %%%0,%1	#EQI2\nbz %a	#EQI2\n"    2	/* equal branch for int */
 

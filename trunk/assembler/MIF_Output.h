@@ -13,15 +13,16 @@
 #include <iostream>
 #include <fstream>
 #include <iomanip>
+
 using namespace std;
 
 class MIF_Output {
 public:
     enum radix { BIN, DEC, HEX, OCT, UNS };
-    MIF_Output(unsigned depth = 16, unsigned width = 1024, enum radix address = HEX, enum radix data = HEX);
+    MIF_Output(unsigned depth = 1024, unsigned width = 16, enum radix address = HEX, enum radix data = HEX);
     
     template <class T>
-    void generateObjectFile(string fileName, vector<T> instructions);
+    void generateObjectFile(string fileName, vector<T> instructions, vector<string> vec);
     
     virtual ~MIF_Output();
 private:
@@ -32,7 +33,7 @@ private:
 };
 
 template <class T>
-void MIF_Output::generateObjectFile(string fileName, vector<T> instructions)
+void MIF_Output::generateObjectFile(string fileName, vector<T> instructions, vector<string> vec)
 {
     ofstream ofile;
     ofile.open(fileName.c_str());
@@ -69,7 +70,7 @@ void MIF_Output::generateObjectFile(string fileName, vector<T> instructions)
         saddr = "BIN";
     else
         saddr = "UNS";
-    ofile << "DATA_RADIX = " << data << ";" << endl;
+    ofile << "DATA_RADIX = " << saddr << ";" << endl;
     //cout << "\t% Enter BIN, DEC, HEX, OCT, or UNS; unless %" << endl;
     //ofile << "\t\t% otherwise specified, radixes = HEX %" << endl;
     //ofile << "-- Specify value for addresses, which can be single address or range" << endl;
@@ -97,7 +98,8 @@ void MIF_Output::generateObjectFile(string fileName, vector<T> instructions)
 
             ofile <<  std::string(result + index, result + size);
         }
-        ofile << ";" << endl;
+        ofile << ";";
+        ofile << "\t-- " << vec[i] << endl;
     }
     //ofile << "--" << endl;
     ofile << "END;" << endl;

@@ -25,18 +25,20 @@ private:
     vector<unsigned short int> encodedInstructions;
     ELF_Input ifile;
     vector<Instruction> asmInstrs;
+    vector<string> instructionStrings;
     map<string, unsigned> labels;
     void open(string ifile);					    // stands just for output file
     static int BUFFER_SIZE;
     static Assembler* instance;
     OutputFileType objectFile;
-    Assembler(OutputFileType fileType = ELF);
+    Assembler(OutputFileType fileType = MIF);
     vector<unsigned short int> registerValues;
     void writeToFileELF(string filename, vector<unsigned short int>instrs);
     void writeToFileMIF(string filename, vector<unsigned short int>instrs);
 public:
     inline OutputFileType getObjectFileType() const { return objectFile; }
     inline void setObjectFileType(OutputFileType type) { objectFile = type; }
+    inline vector<Instruction> getWordInstructions() const { return asmInstrs; }
     static Assembler* getInstance()
     {
         if (instance == NULL)
@@ -47,7 +49,6 @@ public:
     map<string, unsigned> getLabels() const { return labels; }
     void run(string ifile);
     void writeToFile();
-
 };
 
 #endif /* ASSEMBLER_H_ */
