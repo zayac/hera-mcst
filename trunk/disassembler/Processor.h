@@ -12,7 +12,7 @@ typedef half_byte reg_ind;
 class Memory
 {
 	word _data[MEM_SIZE];
-
+	unsigned int Size_Program;
 public:
     // Get and set data by dedicated address
 	word Get (mem_operator pos) const;
@@ -20,6 +20,7 @@ public:
 
 	// return pointer to the memory array
     word* data(){return _data;}
+   unsigned int * Get_size(){return &Size_Program;}
 };
 
 /* 
@@ -73,90 +74,6 @@ class Execution
 	virtual bool Continue() = 0;
 	virtual word Get_cur_cmd() = 0;
 	virtual void End_circle() = 0;
-};
-
-class Executor :public Execution
-{
-    bool _pc_increase_needed;
-	word _reg[REG_NUM];         // Register file
-	word  PC;                   // Program counter
-
-    // Flag register
-	union
-	{
-		struct
-		{
-			unsigned char sign:1;
-			unsigned char zero:1;
-			unsigned char overflow:1;
-			unsigned char carry:1;
-			unsigned char carry_block:1;
-		};
-		struct
-		{
-			int flags:5;
-		};
-	};
-	word& SP;               // Stack pointer
-	word& FP;               // Frame pointer
-	word& TMP;
-
-	Memory* _mem;          // Pointer to a memory
-
-	inline void Correct_zero_sign (reg_ind d);
-	bool Get_condition_for_branch (half_byte c);
-
-public:
-    Executor (Memory* _mem);
-    /* Print some debugging information.
-     * Only register file at the moment
-     */ 
-    virtual void dump();
-
-	virtual void SETLO (reg_ind d, byte v);
-	virtual void SETHI (reg_ind d, byte v);
-
-	virtual void AND (reg_ind d, reg_ind a, reg_ind b);
-	virtual void OR (reg_ind d, reg_ind a, reg_ind b);
-	virtual void ADD (reg_ind d, reg_ind a, reg_ind b);
-	virtual void SUB (reg_ind d, reg_ind a, reg_ind b);
-	virtual void MULT (reg_ind d, reg_ind a, reg_ind b);
-	virtual void XOR (reg_ind d, reg_ind a, reg_ind b);
-
-	virtual void LSL (reg_ind d, reg_ind v);
-	virtual void LSR (reg_ind d, reg_ind v);
-	virtual void LSL8 (reg_ind d, reg_ind v);
-	virtual void LSR8 (reg_ind d, reg_ind v);
-	virtual void ASL (reg_ind d, reg_ind v);
-	virtual void ASR (reg_ind d, reg_ind v);
-
-	virtual void SETF (five_bits b);
-	virtual void CLRF (five_bits b);
-
-	virtual void SAVEF (reg_ind d);
-	virtual void RSTRF (reg_ind d);
-
-	virtual void INC (reg_ind d, byte v);
-	virtual void DEC (reg_ind d, byte v);
-
-	virtual void LOAD (reg_ind d, five_bits o, reg_ind b);
-	virtual void STORE (reg_ind d, five_bits o, reg_ind b);
-
-	virtual void BRANCH (half_byte c, reg_ind b);
-	virtual void BRANCHR (half_byte c, byte r);
-	virtual void SWI (half_byte i);
-	virtual void RTI();
-	virtual void RETURN();
-
-	virtual void CALL (byte s, reg_ind b);
-
-    // Set program counter value
-	virtual void Set_PC (word nval);
-    // Continue performing instructions from the stopped place
-	virtual bool Continue();
-	virtual word Get_cur_cmd();
-	virtual void End_circle();
-
 };
 
 

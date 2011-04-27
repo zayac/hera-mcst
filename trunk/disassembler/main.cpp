@@ -1,14 +1,11 @@
 #include <iostream>
 #include <string>
-#include "ELF_Output.h"
 #include "ELF_Input.h"
 #include "CELFHeader.h"
-#include "Instruction.h"
 #include "CProgramHeader.h"
 #include "SectionHeader.h"
-#include "ELFWriter.h"
 #include "ELFReader.h"
-//#include "Processor.h"
+#include "MIFReader.h"
 #include "Disasm.h"
 #include <fstream>
 #include <cstring>
@@ -35,21 +32,35 @@ int main(int argc, char** argv)
         }
         else
         {
-            Memory mem;
-            // constructor that loads application to the memory
-            ELFReader rdr(mem.data());
-            ELF_Input from;
+		Memory mem;
+	// constructor that loads application to the memory
 
-            from.open (argv[i], ios_base::binary);
-            if (rdr.read (&from)) cout <<"read successefull!"<<endl;
-            else cout <<rdr.Get_last_error();
+		ELF_Input from;
+		from.open (argv[i], ios_base::binary);
+
+		char check[4];
+		from.read(check, 4);
+		if(check[0] == 0x7f &&
+		check[1] == 'E' && //preliminary identification
+		check[2] == 'L' &&
+		check[3] == 'F' ){
+			from.seekg(0);
+			ELFReader rdr(mem.data());
+			if (rdr.read (&from)) cout <<"read successefull!"<<endl;
+			else cout <<rdr.Get_last_error();
+		} else {
+			from.seekg(0);
+			MIFReader rdr(mem.data(), mem.Get_size());
+			if(!rdr.read (&from)) cout <<"read successefull!"<<endl;
+			else cout <<"Failed read the file"<<endl;
+		}
             from.close();
 
             Disasm dis (cout, &mem);
             Translator cpu(&dis);
 
             cout <<"disasm:\n";
-            cpu.Run (1);
+            cpu.Run (0);
             //cpu._exe.dump
         }
     }
