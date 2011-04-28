@@ -1,0 +1,39 @@
+DEPTH = 1024;
+WIDTH = 16;
+ADDRESS_RADIX = HEX;
+DATA_RADIX = HEX;
+CONTENT
+BEGIN
+0000	:	ed00;	-- setlo %r13, 0
+0001	:	fd00;	-- sethi %r13, 0
+0002	:	480d;	-- load %r8,0,%r13
+0003	:	3068;	-- setf 8
+0004	:	b080;	-- sub %r0, %r8, %r0
+0005	:	1813;	-- bz .L6
+0006	:	ed01;	-- setlo %r13, 1
+0007	:	fd00;	-- sethi %r13, 0
+0008	:	3068;	-- setf 8
+0009	:	b08d;	-- sub %r0, %r8, %r13
+000a	:	1818;	-- bz .L7
+000b	:	ed02;	-- setlo %r13, 2
+000c	:	fd00;	-- sethi %r13, 0
+000d	:	3068;	-- setf 8
+000e	:	b08d;	-- sub %r0, %r8, %r13
+000f	:	1813;	-- bz .L6
+0010	:	ed1c;	-- setlo %r13, 28
+0011	:	fd00;	-- sethi %r13, 0
+0012	:	100d;	-- br %r13
+0013	:	e901;	-- setlo %r9, 1
+0014	:	f900;	-- sethi %r9, 0
+0015	:	ed1e;	-- setlo %r13, 30
+0016	:	fd00;	-- sethi %r13, 0
+0017	:	100d;	-- br %r13
+0018	:	a900;	-- add %r9, %r0, 0
+0019	:	ed1e;	-- setlo %r13, 30
+001a	:	fd00;	-- sethi %r13, 0
+001b	:	100d;	-- br %r13
+001c	:	e9ff;	-- setlo %r9, 255
+001d	:	f8ff;	-- sethi %r9, -1
+001e	:	a190;	-- add %r1, %r9, 0
+001f	:	1111;	-- return
+END;
