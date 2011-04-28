@@ -22,7 +22,7 @@ regex Instruction::exprOperShift("^(lsl|lsr|lsl8|lsr8|asl|asr) ((%r[0-9]{1,2})|(
 regex Instruction::exprOperSetClearFlags("^(setf|clrf) ((%r[0-9]{1,2})|(%fp))", regex_constants::icase);
 regex Instruction::exprOperSaveRestoreFlags("^(save|rstrf) ((%r[0-9]{1,2})|(%fp))", regex_constants::icase);
 regex Instruction::exprOperIncDecFlag("^(inc|dec) ((%r[0-9]{1,2})|(%fp)) *, *(((%r[0-9]{1,2})|(%fp))|([0-9]+))", regex_constants::icase);
-regex Instruction::exprOperLoadStore("^(load|store) ((%r[0-9]{1,2})|(%fp)) *, *((%r[0-9]{1,2})|(%fp)) *, *((%r[0-9]{1,2})|(%fp))", regex_constants::icase);
+regex Instruction::exprOperLoadStore("(^(store) ((%r[0-9]{1,2})|(%fp)) *, *((%r[0-9]{1,2})|(%fp)) *, *((%r[0-9]{1,2})|(%fp)))|(^(load) ((%r[0-9]{1,2})|(%fp)) *, *([0-9]+) *, *((%r[0-9]{1,2})|(%fp)))", regex_constants::icase);
 regex Instruction::exprOperBranch("^(brr?|blr?|bger?|bler?|bgr?|buler?|bugr?|bzr?|bnzr?|bcr?|bncr?|bsr?|bnsr?|bvr?|bnvr?) ((([A-Za-z_.])([A-Za-z0-9_.])*)|((%r[0-9]{1,2})|(%fp)))", regex_constants::icase);
 regex Instruction::exprOperReturn("^(return|rti)", regex_constants::icase);
 regex Instruction::exprOperSwi("^(swi) [0-9]+", regex_constants::icase);
