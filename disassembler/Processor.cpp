@@ -155,7 +155,7 @@ inline void Translator::Process_inc_dec (word cmd)
 	byte v = cmd&0x003f;//0000 0000 0011 1111
 	reg_ind d = (cmd&0x0f00) >> 8;
 
-	if ((cmd&0x0020) == 0) //0000 0000 0010 0000
+	if ((cmd&0x0040) == 0) //0000 0000 0100 0000
 		_exe->INC (d, v);
 	else
 		_exe->DEC (d, v);
