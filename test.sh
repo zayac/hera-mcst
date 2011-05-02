@@ -20,25 +20,24 @@ do
 		testDir="${args[$index]}"
 		break
 		;;
-# 	-B)
-# 		cd ./lcc
-# 		./rbld
-# 		echo LCC build success
-# 		cd ../
-# 
-# 		make -C ./assembler clean 
-# 		make -C ./assembler 
-# 		echo Assembler build success
-# 
-# 		make -C ./simulator clean
-# 		make -C ./simulator
-# 		echo Simulator build success
-# 		cp ./lcc/lcc ./compiler
-# 		cp -R ./lcc/build ./build
-# 		cp ./assembler/assembler ./asm
-# 		cp ./simulator/simulator ./sim
-# 		break
-# 		;;
+	-B)
+		cd ./lcc
+		./rbld
+		echo LCC build success
+		cd ../
+
+		make -C ./assembler clean 
+		make -C ./assembler 
+		echo Assembler build success
+
+		make -C ./simulator clean
+		make -C ./simulator
+		echo Simulator build success
+		cp ./lcc/lcc ./compiler
+		cp -R ./lcc/build ./build
+		cp ./assembler/assembler ./asm
+		cp ./simulator/simulator ./sim
+		;;
 	esac
 done
 # 	if [ arg = "-T" ]
@@ -59,9 +58,9 @@ do
 	(false; (../asm ../$nameAsm 1>> ../file.log)) && true 
 	if [ $? != 0 ]
 	then 
-		echo Error $f with  exit status 1>> file.log
+		echo Error $f with  exit status 1>> ../file.log
 	else
-		echo Passed $f with  exit status 1>> file.log
+		echo Passed $f with  exit status 1>> ../file.log
 	fi
 	cd ../
 	echo --------------------------------------Simulate $f--------------------------------------  1>> file.log
