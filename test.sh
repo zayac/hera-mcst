@@ -1,5 +1,10 @@
 #!/bin/bash -e
-
+if [ -f old.log ]
+then
+	rm old.log
+fi
+cp file.log old.log
+rm file.log
 if [ ! -n "$1" ]
 then
   echo "Usage: `basename $0` -B[Miss Build] -C[commit with message] -T [specify folder with tests]"
