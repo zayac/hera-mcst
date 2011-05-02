@@ -2,7 +2,7 @@
 
 if [ ! -n "$1" ]
 then
-  echo "Usage: `basename $0` -B[Miss Build] -C[commit] -T [specify folder with tests]"
+  echo "Usage: `basename $0` -B[Miss Build] -C[commit with message] -T [specify folder with tests]"
 fi
 index=0
 args=("$@")
@@ -13,12 +13,10 @@ do
 	case $arg in
 	-C)
 		svn update
-		svn commit -m "New message from commit"
-		break
+		svn commit -m "${args[$index]}"
 		;;
 	-T)
 		testDir="${args[$index]}"
-		break
 		;;
 	-B)
 		cd ./lcc
