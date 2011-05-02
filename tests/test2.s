@@ -1,12 +1,13 @@
-#.section ".text"
+.section ".text"
 main:
-set %r11, 1	#con
-set %r10, 2	#con
-cmp %r11, %r10	#LEI2
+set %r9,1	#con
+set %r8,2	#con
+cmp %r9,%r8	#LEI2
 bler .L2	#LEI2
-mult %r1, %r11, %r10	#MULI2
-brr .L1	#JUMPV
+mult %r1,%r9,%r8	#MULI2
+set %r13,.L1	#ADDRGP2
+br %r13
 .L2:
-add %r1, %r11, %r10	#ADDI2
+add %r1,%r9,%r8	#ADDI2
 .L1:
 return
