@@ -4,12 +4,20 @@ if [ ! -n "$1" ]
 then
   echo "Usage: `basename $0` -B[Miss Build] -C[commit] -T [specify folder with tests]"
 fi
+index=0
+args=("$@")
+testDir="./source"
 for arg in "$@"
 do 
+	let "index+=1"
 	case $arg in
 	-C)
 		svn update
 		svn commit -m "New message from commit"
+		break
+		;;
+	-T)
+		testDir="${args[$index]}"
 		break
 		;;
 # 	-B)
@@ -38,19 +46,25 @@ done
 # 		echo 
 # 	fi
 
-for f in ./source/*.c
+for f in $testDir/*.c
 do
-	echo --------------------------------------Compile $f--------------------------------------
+	echo --------------------------------------Compile $f-------------------------------------- 1>> file.log
 	nameAsm=$(echo $f|sed 's/\(.*\)\.c/\1.s/')
 	nameObj=$(echo $f|sed 's/\(.*\)\.c/\1.o/')
 	#echo -------------------$nameAsm
 	#echo -------------------$nameObj
 	./compiler -S $f -o $nameAsm
-	cd ./source
-	echo --------------------------------------Assemble $f--------------------------------------
-	../asm ../$nameAsm
+	cd $testDir
+	echo --------------------------------------Assemble $f--------------------------------------  1>> ../file.log
+	(false; (../asm ../$nameAsm 1>> ../file.log)) && true 
+	if [ $? != 0 ]
+	then 
+		echo Error $f with  exit status 1>> file.log
+	else
+		echo Passed $f with  exit status 1>> file.log
+	fi
 	cd ../
-	echo --------------------------------------Simulate $f--------------------------------------
+	echo --------------------------------------Simulate $f--------------------------------------  1>> file.log
 	#./sim $nameObj
 	
 done
