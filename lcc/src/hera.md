@@ -403,7 +403,7 @@ stk13: ADDRLP4  "%a"                  imm(a)
 reg:   stk13   "add %0,%%fp,%%%c\n"  1
 stk: ADDRFP4  "set %%%c,%a\n"                 2
 stk: ADDRLP4  "set %%%c,%a\n"                      2
-stk: ADDRLP2  "set %%%c,%a\n"                      2
+stk: ADDRLP2  "set %%%c,%a\nadd %%%c,%%fp,%%%c\n"  2
 reg: ADDRFP4  "set %%%c,%a\nadd %%%c,%%fp,%%%c\n"  3
 reg: ADDRLP4  "set %%%c,%a\nadd %%%c,%%fp,%%%c\n"  3
 reg: ADDRLP2  "set %%%c,%a\nadd %%%c,%%fp,%%%c\n"  3
@@ -423,32 +423,26 @@ base: ADDU4(reg,con13)  "%%%0+%1"
 base: reg    "%%%0"
 base: con13  "%0"
 base: stk13  "%%fp,%0"
-addr: base           "0,%0"
+addr: base           "%0"
 addrct: base           "%0"
-addr: ADDI2(reg,reg)  "%%%0,%%%1"
-addr: ADDI4(reg,reg)  "%%%0+%%%1"
-addr: ADDP2(reg,reg)  "%%%0,%%%1"
-addr: ADDP4(reg,reg)  "%%%0+%%%1"
-addr: ADDU2(reg,reg)  "%%%0,%%%1"
-addr: ADDU4(reg,reg)  "%%%0+%%%1"
-addr: stk            "%%fp,%%%0"
+addr: stk            "%%%0"
 reg:  INDIRI1(addr)     "ldsb [%0],%%%c\n"  1
-reg:  INDIRI2(addr)     "load %%%c,%0	#INDIRI2\n"  1	/*it's correct */
-reg:  INDIRP2(addr)     "load %%%c,%0	#INDIRP2\n"  1
+reg:  INDIRI2(addr)     "load %%%c,0,%0	#INDIRI2\n"  1	/*it's correct */
+reg:  INDIRP2(addr)     "load %%%c,0,%0	#INDIRP2\n"  1
 reg:  INDIRI4(addr)     "load [%0],%%%c\n"    1
 reg:  INDIRU1(addr)     "ldub [%0],%%%c\n"  1
-reg:  INDIRU2(addr)     "load %%%c,%0   #INDIRU2\n"  1
+reg:  INDIRU2(addr)     "load %%%c,0,%0   #INDIRU2\n"  1
 reg:  INDIRU4(addr)     "ld [%0],%%%c\n"    1
-reg:  INDIRP2(addr)     "ld %%%c,%0  \n"    1
+reg:  INDIRP2(addr)     "load %%%c,0,%0  \n"    1
 reg:  INDIRP4(addr)     "ld [%0],%%%c\n"    1
 reg:  INDIRF4(addr)     "ld [%0],%%f%c\n"   1
 stmt: ASGNI1(addr,reg)  "stb %%%1,[%0]\n"   1
-stmt: ASGNI2(addr,reg)  "store %%%1,%0\n"   1
+stmt: ASGNI2(addr,reg)  "store %%%1,0,%0\n"   1
 stmt: ASGNI4(addr,reg)  "st %%%1,[%0]\n"    1
 stmt: ASGNU1(addr,reg)  "stb %%%1,[%0]\n"   1
-stmt: ASGNU2(addr,reg)  "store %%%1,%0\n"   1
+stmt: ASGNU2(addr,reg)  "store %%%1,0,%0\n"   1
 stmt: ASGNU4(addr,reg)  "st %%%1,[%0]\n"    1
-stmt: ASGNP2(addr,reg)  "store %%%1,%0\n"    1
+stmt: ASGNP2(addr,reg)  "store %%%1,0,%0\n"    1
 stmt: ASGNP4(addr,reg)  "st %%%1,[%0]\n"    1
 stmt: ASGNF4(addr,reg)  "st %%f%1,[%0]\n"   1
 addrl: ADDRLP4            "%%%fp+%a"          imm(a)
@@ -536,12 +530,12 @@ stmt: GEU4(reg,rc)  "cmp %%%0,%1; bgeu %a\n"  2
 stmt: GTI4(reg,rc)  "cmp %%%0,%1; bg %a\n"    2
 stmt: GTU4(reg,rc)  "cmp %%%0,%1; bgu %a\n"   2
 stmt: LEI4(reg,rc)  "cmp %%%0,%1; ble %a\n"   2
-stmt: LEI2(reg,rc)  "cmp %%%0,%1	#LEI2\nble %a	#LEI2\n"   2	/* lesser or equal branch for int */
-stmt: GEI2(reg,rc)  "cmp %%%0,%1	#GEI2\nbge %a	#GEI2\n"   2	/* greater or equal branch for int */
-stmt: GTI2(reg,rc)  "cmp %%%0,%1	#GTI2\nbg %a	#GTI2\n"   2	/* greater branch for int */
+stmt: LEI2(reg,rc)  "cmp %%%0,%1	#LEI2\nbler %a	#LEI2\n"   2	/* lesser or equal branch for int */
+stmt: GEI2(reg,rc)  "cmp %%%0,%1	#GEI2\nbger %a	#GEI2\n"   2	/* greater or equal branch for int */
+stmt: GTI2(reg,rc)  "cmp %%%0,%1	#GTI2\nbgr %a	#GTI2\n"   2	/* greater branch for int */
 stmt: LTI2(reg,rc)  "cmp %%%0,%1	#LTI2\nblr %a	#LTI2\n"   2	/* lesser branch for int */
-stmt: NEI2(reg,rc)  "cmp %%%0,%1	#NEI2\nbnz %a	#NEI2\n"    2	/* not equal branch for int */
-stmt: EQI2(reg,rc)  "cmp %%%0,%1	#EQI2\nbz %a	#EQI2\n"    2	/* equal branch for int */
+stmt: NEI2(reg,rc)  "cmp %%%0,%1	#NEI2\nbnzr %a	#NEI2\n"    2	/* not equal branch for int */
+stmt: EQI2(reg,rc)  "cmp %%%0,%1	#EQI2\nbzr %a	#EQI2\n"    2	/* equal branch for int */
 
 stmt: LEU4(reg,rc)  "cmp %%%0,%1; bleu %a\n"  2
 stmt: LTI4(reg,rc)  "cmp %%%0,%1; bl %a\n"    2
