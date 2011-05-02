@@ -36,7 +36,7 @@ do
 	../asm ../$nameAsm
 	cd ../
 	echo --------------------------------------Simulate $f--------------------------------------
-	./sim $nameObj
+	#./sim $nameObj
 	
 done
  
