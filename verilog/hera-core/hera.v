@@ -1,11 +1,12 @@
 // top module of HERA CPU
 `timescale 1ns / 1ps
-module hera(
-	input wire clk,
-	input wire rst,
-	
-//	output 
-	output wire out_test
+module hera (
+  // Clock and Reset
+  input clk,
+  input rst,
+
+  // Output 
+  output out_test
 );
 
 wire taken_pc;
@@ -20,31 +21,45 @@ wire mul_en;
 
 wire op_set_val;
 wire op_set_code;
+
 wire op_al_val;
 wire [2:0] op_al_code;
+
 wire op_shift_val;
 wire [3:0] op_shift_code;
+
 wire op_memory_val;
 wire op_memory_code;
+
 wire op_branch_val;
 wire [4:0] op_branch_code;
+
 wire op_special_branch_val;
 wire [1:0] op_special_branch_code;
+
 wire op_call_val;
+wire op_swi_val;
+
 wire [7:0] v_data;
 //wire [15:0] pc;
 wire [9:0] npc;
+
 wire op_set_hi;
 wire op_memory_st;
+
 wire [15:0] rf_ra;
 wire [15:0] rf_rb;
 wire [2:0] flags_from_ram;
 wire [15:0] temp_reg;
+
 wire [15:0] ram_data;
 wire [11:0] ram_addr;
 wire ram_write;
+
 wire call_en;
+wire swi_en;
 wire return_en;
+wire rti_en;
 wire [15:0] load;
 
 wire return_pc; 
@@ -75,13 +90,13 @@ alu_top alu_top(
 	.op_special_branch_code(op_special_branch_code),
   
 	.op_call_val(op_call_val),
+	.op_swi_val(op_swi_val),
   
 	.rf_ra(rf_ra),
 	.rf_rb(rf_rb),
 	.flags_from_ram(flags_from_ram),
   
 	.v_data(v_data),
-  
 
 	.temp_reg(temp_reg),
   
@@ -121,6 +136,7 @@ decoder decoder(
 	.op_special_branch_code(op_special_branch_code),
 
 	.op_call_val(op_call_val),
+	.op_swi_val(op_swi_val),
 
 	.v_data(v_data),
 
@@ -131,11 +147,14 @@ decoder decoder(
 	.load_en(load_en),
 	.call_en(call_en),	
 	.return_en(return_en),
+	.swi_en(swi_en),	
+	.rti_en(rti_en),
 	.mul_en(mul_en),
 	
 	.hold_pc(hold_pc),
 	.return_pc(return_pc)
 );
+
 pc pc_inst(
 	.rst(rst),
 	.clk(clk),
@@ -157,6 +176,8 @@ hera_regf hera_regf(
 	.load_en(load_en),
 	.call_en(call_en),
 	.return_en(return_en),
+	.swi_en(swi_en),
+	.rti_en(rti_en),
 	.mul_en(mul_en),
 	.load(load),  
 	.rd_data(ram_data), // from  ALU to result addr
