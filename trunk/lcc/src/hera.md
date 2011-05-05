@@ -480,11 +480,11 @@ reg: con  "set %%%c,%0	#con\n"  1
 
 rc: con13  "%0"
 rc: reg    "%%%0"
-reg: ADDI2(reg,rc)   "add %%%c,%%%0,%1	#ADDI2\n"  1	/* addition for int */
+reg: ADDI2(reg,rc)   "clrc\nadd %%%c,%%%0,%1	#ADDI2\n"  1	/* addition for int */
 reg: ADDI4(reg,rc)   "add %%%0,%1,%%%c\n"  1
 reg: ADDP2(reg,rc)   "add %%%c,%%%0,%1  #ADDP2\n"  1
 reg: ADDP4(reg,rc)   "add %%%0,%1,%%%c\n"  1
-reg: ADDU2(reg,rc)   "add %%%c,%%%0,%1  #ADDU2\n"  1
+reg: ADDU2(reg,rc)   "clrc\nadd %%%c,%%%0,%1  #ADDU2\n"  1
 reg: ADDU4(reg,rc)   "add %%%0,%1,%%%c\n"  1
 reg: BANDI4(reg,rc)  "and %%%0,%1,%%%c\n"  1
 reg: BORI4(reg,rc)   "or %%%0,%1,%%%c\n"   1
