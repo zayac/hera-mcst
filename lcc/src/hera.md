@@ -492,10 +492,10 @@ reg: BXORI4(reg,rc)  "xor %%%0,%1,%%%c\n"  1
 reg: BANDU4(reg,rc)  "and %%%0,%1,%%%c\n"  1
 reg: BORU4(reg,rc)   "or %%%0,%1,%%%c\n"   1
 reg: BXORU4(reg,rc)  "xor %%%0,%1,%%%c\n"  1
-reg: SUBI2(reg,rc)   "sub %%%c,%%%0,%1	#SUBI2\n"  1	/* substraction for int */
+reg: SUBI2(reg,rc)   "setc\nsub %%%c,%%%0,%1	#SUBI2\n"  1	/* substraction for int */
 reg: SUBI4(reg,rc)   "sub %%%0,%1,%%%c\n"  1
 reg: SUBP4(reg,rc)   "sub %%%0,%1,%%%c\n"  1
-reg: SUBU2(reg,rc)   "sub %%%c,%%%0,%1  #SUBU2\n"  1
+reg: SUBU2(reg,rc)   "setc\nsub %%%c,%%%0,%1  #SUBU2\n"  1
 reg: SUBU4(reg,rc)   "sub %%%0,%1,%%%c\n"  1
 rc5: CNSTI4  "%a"    range(a, 0, 31)
 rc5: reg    "%%%0"
@@ -640,9 +640,8 @@ static void progbeg(int argc, char *argv[]) {
         ireg[15]->x.name = "sp";
         ireg[14]->x.name = "fp";
         iregw = mkwildcard(ireg);
-        tmask[IREG] = (1<<r13) | (1<<r10) | (1<<r11) | (1<<r12);
-        vmask[IREG] = (1<<r1) | (1<<r2) | (1<<r3) | (1<<r4) | (1<<r5) | (1<<r6) | (1<<r7) |
-                  (1<<r8) | (1<<r9);
+        tmask[IREG] = (1<<r10) | (1<<r11) | (1<<r12) | (1<<r9);
+        vmask[IREG] = (1<<r1) | (1<<r2) | (1<<r3) | (1<<r4) | (1<<r5) | (1<<r6) | (1<<r7) | (1<<r8);
         tmask[FREG]  = 0;
         vmask[FREG]  = 0;
 
