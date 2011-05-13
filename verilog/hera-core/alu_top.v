@@ -179,7 +179,7 @@ module alu_top
   // Modify temporary register? if used multiplication operation
   //
   assign temp_reg = (op_al_val)? flag_data: 
-                    (op_swi_val)? {8'b0, swi_stack_size[15:12]}:
+                    (op_swi_val)? {8'b0, swi_stack_size}:
                                   {8'b0, v_data};
 
 
