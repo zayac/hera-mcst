@@ -451,7 +451,7 @@ vector< pair <unsigned short int, string> > Instruction::encode(unsigned &cmd_co
                 result.push_back(*i);
         } else if (!getOperation().get().compare("clrc")) {
             char d[256];
-            sprintf(d, "clr 8");
+            sprintf(d, "clrf 8");
             vector< pair< unsigned short int, string> > v = Instruction(d).encode(cmd_counter);
             for (vector< pair< unsigned short int, string> >::iterator i = v.begin(); i != v.end(); i++)
                 result.push_back(*i);
