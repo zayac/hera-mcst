@@ -5,7 +5,7 @@
  */
 `define end_tr 16'heeff //signal "end of transmission". Should be changed!!!!!!
 						//is written to memory
-`define DIVIDER  14'd9999//should be 14'd9999 !!!
+`define DIVIDER  14'd9//should be 14'd9999 !!!
 module hyperterm
 (
 input  wire clk_48, //external clock (48 MHz)

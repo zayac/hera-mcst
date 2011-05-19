@@ -121,7 +121,7 @@ alu_top alu_top(
 	.temp_reg(temp_reg),
   
 	.ram_data(ram_data),
-	.ram_addr(ram_addr),
+	.ram_addr(mem_addr),
   //output wire ram_read,
 	.ram_write(ram_write),
   
