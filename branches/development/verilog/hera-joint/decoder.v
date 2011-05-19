@@ -3,7 +3,7 @@
 module decoder (
   // Clock and Reset
   input clk,
-  input rst,
+  input rst_s,
 
   // Incoming instruction code
   input [15:0] q,
@@ -69,9 +69,9 @@ module decoder (
   
   `include "opcode_decoder.v"
   
-  always@(posedge clk or negedge rst)
+  always@(posedge clk)
   begin
-    if (~rst)
+    if (~rst_s)
       cf <= 1'b0;
     else if ((q == de_return) || (return_pc) || (q == de_rti))
       cf <= 1'b1;
@@ -404,7 +404,7 @@ module decoder (
   always@(*)
   begin
     if (cf)
-      rsb = 4'b0000;
+      rsa = 4'b0000;
     else if (q[15:13] == 3'b111)
       rsa = q[11:8];
     else if ({q[15:12], q[7:6]} == de_inc)
@@ -559,9 +559,9 @@ module decoder (
       hold_pc <= 1'b0;
   end
 
-  always@(posedge clk or negedge rst)
+  always@(posedge clk)
   begin
-    if (~rst)
+    if (~rst_s)
       return_pc = 1'b0;
     else if (q == de_return || q == de_rti)
       return_pc = 1'b1;

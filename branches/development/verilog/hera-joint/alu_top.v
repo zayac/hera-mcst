@@ -5,7 +5,7 @@ module alu_top
 (
   // Clock and Reset
   input clk,
-  input rst,
+  input rst_s,
 
   //
   // From Decoder
@@ -66,7 +66,7 @@ module alu_top
   //
   // To RAM
   //
-  output [11:0] ram_addr,
+  output [15:0] ram_addr,
   // output wire ram_read,
   output ram_write,
   // output wire [16] flags_from_ram,
@@ -179,7 +179,7 @@ module alu_top
   // Modify temporary register? if used multiplication operation
   //
   assign temp_reg = (op_al_val)? flag_data: 
-                    (op_swi_val)? {8'b0, swi_stack_size[15:12]}:
+                    (op_swi_val)? {8'b0, swi_stack_size}:
                                   {8'b0, v_data};
 
 
@@ -188,7 +188,7 @@ module alu_top
   //
   always@(posedge clk)
   begin
-    if(~rst)
+    if(~rst_s)
       sign <= 1'b0;
     else
       sign <= (op_al_val & ((op_al_code == op_al_code_mult))        )? temp_reg[15] :
@@ -213,7 +213,7 @@ module alu_top
   //
   always@(posedge clk)
   begin
-    if (~rst)
+    if (~rst_s)
       zero <= 1'b0;
     else 
       zero <= (op_al_val & (op_al_code != op_al_code_mult) & (ram_data == 16'b0))? 1'b1:
@@ -245,7 +245,7 @@ module alu_top
   //
   always@(posedge clk)
   begin
-    if (~rst)
+    if (~rst_s)
       overflow <= 1'b0;
     else if (op_al_val & (op_al_code == op_al_code_add))
       overflow <= (c15 ^ flag_data[0]);
@@ -279,7 +279,7 @@ module alu_top
   //
   always@(posedge clk)
   begin
-    if (~rst)
+    if (~rst_s)
       carry <= 1'b0;
     else if (op_al_val & ((op_al_code == op_al_code_add ) | (op_al_code == op_al_code_sub))) 
         carry <= flag_data[0];
@@ -301,7 +301,7 @@ module alu_top
   //
   always@(posedge clk)
   begin
-    if(~rst)
+    if(~rst_s)
       carry_block <= 1'b0;
     else
       carry_block <= (~op_shift_val)? carry_block:
@@ -314,7 +314,7 @@ module alu_top
   //
   // Memory instructions
   //
-  assign ram_addr = (op_memory_val)? rf_ra[11:0] + v_data:
+  assign ram_addr = (op_memory_val)? rf_ra[15:0] + v_data:
                     (op_special_branch_val & ((op_special_branch_code == op_special_br_code_return) ||
                                               (op_special_branch_code == op_special_br_code_rti)))? rf_ra[11:0]:
                     12'b0;

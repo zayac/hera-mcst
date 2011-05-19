@@ -5,11 +5,12 @@
  */
 `define end_tr 16'heeff //signal "end of transmission". Should be changed!!!!!!
 						//is written to memory
+`define DIVIDER  14'd9999//should be 14'd9999 !!!
 module hyperterm
 (
 input  wire clk_48, //external clock (48 MHz)
 input  wire rst_, //reset signal
-output reg  tx,
+//output reg  tx,
 input wire rd,
 input  wire dtr,
 output wire dsr,
@@ -17,13 +18,13 @@ output wire cd,
 input  wire rts,
 output wire cts,
 output reg [15:0] data,
-output reg [10:0] addr,
+output reg [9:0] addr,
 output reg wren,
-output reg clk2, //this clock is generated just for Logic Analyzer
-output reg resout, //reset signal for HERA
-output reg [7:0] buffer //for test only. shouldn't be output
+//output reg clk2, //this clock is generated just for Logic Analyzer
+output reg resout //reset signal for HERA
 );
-//reg [7:0] buffer; //internal buffer for one byte of transmission
+
+reg [7:0] buffer; //internal buffer for one byte of transmission
 assign dsr = dtr;
 assign cd  = dtr;
 assign cts = rts;
@@ -36,8 +37,9 @@ reg inc_addr; //enable for address increment
 reg [4:0] res_count;
 reg end_flag; //flag showing end of transmission
 reg  [3:0] tx_count; //counter showing which bit of a frame we are processing now
+reg end_rst; //flag for stoping resout
 
-reg [13:0] count2; //counter for the generation of clk2
+//reg [13:0] count2; //counter for the generation of clk2
 
 reg [13:0] count; //counter for the generation of clk
 
@@ -46,11 +48,12 @@ always @ ( posedge clk_48, negedge rst_ )
 if ( ~rst_ )
 	count <= 14'd0;
 else
-if ( count == 14'd9999 )
+if ( count == `DIVIDER )
 	count <= 14'd0;
 else
 	count <= count + 1'd1;
-	
+/******************************
+  generation of count2 for clk2	
 always @ ( posedge clk_48, negedge rst_ )
 if ( ~rst_ )
 	count2 <= 14'd0;
@@ -59,23 +62,24 @@ if ( count2 == 14'd999 )
 	count2 <= 14'd0;
 else
 	count2 <= count2 + 1'd1;
-	
+	*/
 /* generation of clk */
 always @ ( posedge clk_48, negedge rst_ )
 if ( ~rst_ )
 	clk <= 1'b0;
 else
-if ( count == 14'd9999 )
+if ( count == `DIVIDER )
 	clk <= ~clk;
 	
-/* generation of clk2 */	
+/*******************************
+ generation of clk2 (this clock was used only for logic analyzer)
 always @ ( posedge clk_48, negedge rst_ )
 if ( ~rst_ )
 	clk2 <= 1'b0;
 else
 if ( count2 == 14'd999 )
 	clk2 <= ~clk2;
-
+********************************/
 always @ ( posedge clk, negedge rst_ )begin
 if ( ~rst_ )
 	tx_count <= 4'd0;
@@ -170,8 +174,8 @@ end
 /*generating address */
 always @(posedge clk, negedge rst_)  //combinational logic here!
 //TODO: ask how to make it sequential
-addr <= (~rst_)? 11'h7FF: //very, very, very, VERY dirty hack!!!!!!!!!!!
-        end_write ? 11'b0 :  
+addr <= (~rst_)? 10'h3FF: //very, very, very, VERY dirty hack!!!!!!!!!!!
+        end_write ? 10'b0 :  
         (part == 3'd4 && inc_addr == 0)? addr + 1'b1 : addr;
 
 /*generation of wren */
@@ -186,15 +190,19 @@ always @(posedge clk, negedge rst_)
 resout <=(~rst_)? 1'b1:
 		 end_flag ? 1'b0: 1'b1; //if reset is low level
 
-
+/* setting of end_rst flag  */
+always @(posedge clk, negedge rst_)
+  end_rst <= (~rst_) ? 1'b0 :
+              (res_count == 4'd3) ? 1'b1 : end_rst;
+                   
 always @(posedge clk, negedge rst_)
 	res_count <=(~rst_)? 4'b0:
 				end_flag ? res_count + 1'b1 : res_count;	
 
 always @(posedge clk, negedge rst_) begin
 	end_flag <= (~rst_)? 1'b0:
-				(part == 3'd0 & data == `end_tr) ? 1'b1 : 
-			    (res_count == 4'd3) ? 1'b0 : end_flag;
+	       (end_rst == 1'b1)? 1'b0 :
+				 (part == 3'd0 & data == `end_tr)? 1'b1 : end_flag;
 end
 
 /*generation of a signal for stop writing in RAM */
