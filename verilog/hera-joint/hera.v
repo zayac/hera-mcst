@@ -3,12 +3,28 @@
 module hera (
   // Clock and Reset
   input clk,
-  input rst,
+  input hard_rst,
 
   // Output 
-  output out_test
-);
+  output out_test,
+  inout [15:0] IO,
+  output wire [15:0] mem_addr,
+  output wire CE_,
+  output wire OE_,
+  output wire WE_,
+  output wire LB_,
+  output wire UB_,
+  
+ // output reg  tx,
+  input wire rd_com,
+  input  wire dtr,
+  output wire dsr,
+  output wire cd,
+  input  wire rts,
+  output wire cts
 
+);
+wire rst_s;
 wire taken_pc;
 wire [15:0] next_pc;
 wire [15:0] pc;
@@ -43,7 +59,11 @@ wire op_swi_val;
 wire [7:0] v_data;
 //wire [15:0] pc;
 wire [9:0] npc;
-
+wire op_write; //write_enable for commands memory
+reg [9:0] op_addr; //address for commands memory
+wire [9:0] hyperterm_address; //address from hyperterm module
+wire [15:0] hyperterm_data; //data from hyperterm module
+reg mode; //this signal switches command memory from being written from COM interface to reading
 wire op_set_hi;
 wire op_memory_st;
 
@@ -66,7 +86,7 @@ wire return_pc;
 wire hold_pc;
 
 alu_top alu_top(
-	.rst(rst),
+	.rst_s(rst_s),
 	.clk(clk),
   
 	.pc(pc),
@@ -112,7 +132,7 @@ alu_top alu_top(
 );
 
 decoder decoder(
-	.rst(rst),
+	.rst_s(rst_s),
 	.clk(clk),
 
 	.q(q), // ROM
@@ -156,7 +176,7 @@ decoder decoder(
 );
 
 pc pc_inst(
-	.rst(rst),
+	.rst_s(rst_s),
 	.clk(clk),
 	.taken_pc(taken_pc),//ËÁ ¿À”
 	.return_pc(return_pc),
@@ -168,7 +188,7 @@ pc pc_inst(
 );
 
 hera_regf hera_regf(
-	.rst(rst),
+	.rst_s(rst_s),
 	.clk(clk),
 	.rsa(rsa), //least part of instructoin
 	.rsb(rsb), //second  part of instr. 
@@ -186,23 +206,62 @@ hera_regf hera_regf(
 	.rsa_data(rf_ra), 
 	.rsb_data(rf_rb)
 );
-
+/*
 hera_rom hera_rom (
 	.address(npc),
 	.clock(clk),
 	.q(q)
 );
-	
+*/
 hera_ram	hera_ram_inst (
 	.clock(clk),
-	.data ( ram_data ),
+	.data ( hyperterm_data ),
 //	.rdaddress ( ram_addr ),
 //	.wraddress (ram_addr),
-	.address (ram_addr[10:0]),
-	.wren ( ram_write ),
-	.q ( load )
+	.address (op_addr),
+	.wren ( op_write ),
+	.q ( q )	
 	);
+
 	
+mem_ctrl mem_ctrl (
+
+  .clk (clk),
+  .WE (ram_write),
+  .addr (ram_addr),
+  .dat_in (ram_data),
+  .dat_fr_mem (IO),
+  .mem_addr (mem_addr),
+  .out_dat (load),
+  .CE_ (CE_),
+  .OE_ (OE_),
+  .WE_ (WE_),
+  .LB_ (LB_),
+  .UB_ (UB_)
+);
+
+hyperterm com_interface (
+  .clk_48(clk),
+  .rst_(hard_rst),
+  //.tx(tx),
+  .rd(rd_com),
+  .dtr(dtr),
+  .dsr(dsr),
+  .cd(cd),
+  .rts(rts),
+  .cts(cts),
+  .data(hyperterm_data),
+  .addr(hyperterm_address),
+  .wren(op_write),
+  .resout(rst_s)
+);
+always @(posedge clk, negedge hard_rst)
+  mode <= (~hard_rst)? 1'b0 :
+		  (~rst_s)? 1'b1 : mode;
+  
+always @*
+  op_addr <= mode ? npc : hyperterm_address;
+  
 assign out_test = ram_write;
 	
 endmodule

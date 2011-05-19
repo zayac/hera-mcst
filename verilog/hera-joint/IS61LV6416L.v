@@ -19,7 +19,7 @@
 // FOR ANY DIRECT OR INDIRECT DAMAGES, WHETHER IN CONTRACT OR
 // TORT, INCLUDING ANY LOST PROFITS OR OTHER INCIDENTAL,
 // CONSEQUENTIAL, EXEMPLARY, OR PUNITIVE DAMAGES ARISING OUT OF
-// THE USE OR APPLICATION OF THE model. Further, ISSI
+// THE USE OR APPLICATION OF THE model. No mne kak-to pohui. Further, ISSI
 // reserves the right to make changes without notice to any
 // product herein to improve reliability, function, or design.
 // ISSI does not convey any license under patent rights or

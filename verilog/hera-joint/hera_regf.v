@@ -2,7 +2,7 @@
 
 module hera_regf(
   input clk,
-  input rst,
+  input rst_s,
   input [3:0] rsa, //least part of instructoin
   input [3:0] rsb, //second  part of instr. 
   input [3:0] rd, // result addr
@@ -103,9 +103,9 @@ module hera_regf(
                       (load == 16'b0)? {1'b1, load[15], 1'b0}:
                       {1'b1, load[15], 1'b1};
 	
-  always@(negedge rst or posedge clk)
+  always@(posedge clk)
   begin
-    if (~rst)
+    if (~rst_s)
     begin
       R0 <= 16'b0;
       R1 <= 16'b0;
