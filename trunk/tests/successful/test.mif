@@ -1,0 +1,62 @@
+DEPTH = 1024;
+WIDTH = 16;
+ADDRESS_RADIX = HEX;
+DATA_RADIX = HEX;
+CONTENT
+BEGIN
+0000	:	e7f9;	-- setlo %r7, 249
+0001	:	f775;	-- sethi %r7, 117
+0002	:	a400;	-- add %r4, %r0, 0
+0003	:	a300;	-- add %r3, %r0, 0
+0004	:	a500;	-- add %r5, %r0, 0
+0005	:	e602;	-- setlo %r6, 2
+0006	:	f600;	-- sethi %r6, 0
+0007	:	e801;	-- setlo %r8, 1
+0008	:	f800;	-- sethi %r8, 0
+0009	:	e602;	-- setlo %r6, 2
+000a	:	f600;	-- sethi %r6, 0
+000b	:	ec31;	-- setlo %r12, 49
+000c	:	fc00;	-- sethi %r12, 0
+000d	:	100c;	-- br %r12
+000e	:	e801;	-- setlo %r8, 1
+000f	:	f800;	-- sethi %r8, 0
+0010	:	ec22;	-- setlo %r12, 34
+0011	:	fc00;	-- sethi %r12, 0
+0012	:	100c;	-- br %r12
+0013	:	cc68;	-- mult %r12,%r6,%r8
+0014	:	3068;	-- setf 8
+0015	:	b0c7;	-- sub %r0, %r12, %r7
+0016	:	0908;	-- bnzr .L10
+0017	:	a460;	-- add %r4, %r6, 0
+0018	:	a380;	-- add %r3, %r8, 0
+0019	:	e501;	-- setlo %r5, 1
+001a	:	f500;	-- sethi %r5, 0
+001b	:	ec25;	-- setlo %r12, 37
+001c	:	fc00;	-- sethi %r12, 0
+001d	:	100c;	-- br %r12
+001e	:	ec01;	-- setlo %r12, 1
+001f	:	fc00;	-- sethi %r12, 0
+0020	:	3868;	-- clrf 8
+0021	:	a88c;	-- add %r8,%r8,%r12
+0022	:	3068;	-- setf 8
+0023	:	b087;	-- sub %r0, %r8, %r7
+0024	:	04ef;	-- bler .L6
+0025	:	ec01;	-- setlo %r12, 1
+0026	:	fc00;	-- sethi %r12, 0
+0027	:	3068;	-- setf 8
+0028	:	b05c;	-- sub %r0, %r5, %r12
+0029	:	0904;	-- bnzr .L12
+002a	:	ec34;	-- setlo %r12, 52
+002b	:	fc00;	-- sethi %r12, 0
+002c	:	100c;	-- br %r12
+002d	:	ec01;	-- setlo %r12, 1
+002e	:	fc00;	-- sethi %r12, 0
+002f	:	3868;	-- clrf 8
+0030	:	a66c;	-- add %r6,%r6,%r12
+0031	:	3068;	-- setf 8
+0032	:	b067;	-- sub %r0, %r6, %r7
+0033	:	04db;	-- bler .L2
+0034	:	e101;	-- setlo %r1, 1
+0035	:	f100;	-- sethi %r1, 0
+0036	:	1111;	-- return
+END;

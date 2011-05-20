@@ -1,0 +1,27 @@
+DEPTH = 1024;
+WIDTH = 16;
+ADDRESS_RADIX = HEX;
+DATA_RADIX = HEX;
+CONTENT
+BEGIN
+0000	:	e6fe;	-- setlo %r6, 254
+0001	:	f67f;	-- sethi %r6, 127
+0002	:	a800;	-- add %r8, %r0, 0
+0003	:	a700;	-- add %r7, %r0, 0
+0004	:	ec01;	-- setlo %r12, 1
+0005	:	fc00;	-- sethi %r12, 0
+0006	:	3868;	-- clrf 8
+0007	:	a88c;	-- add %r8,%r8,%r12
+0008	:	ec01;	-- setlo %r12, 1
+0009	:	fc00;	-- sethi %r12, 0
+000a	:	3868;	-- clrf 8
+000b	:	a77c;	-- add %r7,%r7,%r12
+000c	:	ecfe;	-- setlo %r12, 254
+000d	:	fc7f;	-- sethi %r12, 127
+000e	:	3068;	-- setf 8
+000f	:	b07c;	-- sub %r0, %r7, %r12
+0010	:	02f4;	-- blr .L2
+0011	:	3068;	-- setf 8
+0012	:	b186;	-- sub %r1,%r8,%r6
+0013	:	1111;	-- return
+END;
