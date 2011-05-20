@@ -73,7 +73,7 @@ wire [2:0] flags_from_ram;
 wire [15:0] temp_reg;
 
 wire [15:0] ram_data;
-wire [11:0] ram_addr;
+wire [15:0] ram_addr;
 wire ram_write;
 
 wire call_en;
@@ -121,7 +121,7 @@ alu_top alu_top(
 	.temp_reg(temp_reg),
   
 	.ram_data(ram_data),
-	.ram_addr(mem_addr),
+	.ram_addr(ram_addr),
   //output wire ram_read,
 	.ram_write(ram_write),
   

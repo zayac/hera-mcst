@@ -3,7 +3,7 @@
  * IMPORTANT: bitrate must be 2400 bps
  *            Minitel emulation must be used
  */
-`define end_tr 16'heeff //signal "end of transmission". Should be changed!!!!!!
+`define end_tr 16'h0000 //signal "end of transmission". Should be changed!!!!!!
 						//is written to memory
 `define DIVIDER  14'd9//should be 14'd9999 !!!
 module hyperterm
@@ -159,7 +159,7 @@ end
 /*forming data */
 always @(posedge clk, negedge rst_)
 if(~rst_)
-  data <= 16'b0;
+  data <= 16'hffff;
 else if(tx_count == 4'd9) begin
 	if(part == 3'd1)
 		data[15:12] <= char;
