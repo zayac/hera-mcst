@@ -1,0 +1,14 @@
+DEPTH = 1024;
+WIDTH = 16;
+ADDRESS_RADIX = HEX;
+DATA_RADIX = HEX;
+CONTENT
+BEGIN
+0000	:	e8ff;	-- setlo %r8, 255
+0001	:	f87f;	-- sethi %r8, 127
+0002	:	e701;	-- setlo %r7, 1
+0003	:	f680;	-- sethi %r7, -128
+0004	:	3868;	-- clrf 8
+0005	:	a187;	-- add %r1,%r8,%r7
+0006	:	1111;	-- return
+END;
