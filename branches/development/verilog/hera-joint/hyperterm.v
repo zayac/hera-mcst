@@ -3,9 +3,9 @@
  * IMPORTANT: bitrate must be 2400 bps
  *            Minitel emulation must be used
  */
-`define end_tr 16'h0000 //signal "end of transmission". Should be changed!!!!!!
+`define end_tr 16'h0000 //signal "end of transmission". Now it's HALT
 						//is written to memory
-`define DIVIDER  14'd9//should be 14'd9999 !!!
+`define DIVIDER  14'd9999//should be 14'd9999 for bitrate 2400 bps
 module hyperterm
 (
 input  wire clk_48, //external clock (48 MHz)
