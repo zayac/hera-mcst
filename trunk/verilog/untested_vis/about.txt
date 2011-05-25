@@ -1,0 +1,1 @@
+Currently there is last Visual Device project release, working as it should. Anyway here it was merged with other projects ( that one with memory controller and a code in RAM(or ROM, dunno)), so never been tested via FPGA. The issue to future generations is to test it and make sure we did a great job.
