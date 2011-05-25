@@ -1,12 +1,20 @@
 // top module of HERA CPU
 `timescale 1ns / 1ps
-module hera (
-  // Clock and Reset
-  input clk,
-  input rst,
-
-  // Output 
-  output out_test
+module hera(
+	input wire clk,
+	input wire rst,
+	
+//	output 
+	output wire out_test,
+	/**
+	 * COM-port interfaces
+	 **/
+  output wire  tx, // data transmit 
+  input  wire dtr, // data terminal ready
+  output wire dsr, // data set ready
+  output wire cd, // carrier detect
+  input  wire rts, //request to send
+  output wire cts //clear to send
 );
 
 wire taken_pc;
@@ -65,6 +73,32 @@ wire [15:0] load;
 wire return_pc; 
 wire hold_pc;
 
+	wire [15:0] R0;
+	wire [15:0] R1;
+	wire [15:0] R2;
+	wire [15:0] R3;
+	wire [15:0] R4;
+	wire [15:0] R5;
+	wire [15:0] R6;
+	wire [15:0] R7;
+	wire [15:0] R8;
+	wire [15:0] R9;
+	wire [15:0] R10;
+	wire [15:0] R11;
+	wire [15:0] R12;
+	wire [15:0] R13;
+	wire [15:0] R14;
+	wire [15:0] R15;
+	wire [4:0] flags;
+	wire [5:0] vis_address_a;
+	wire [5:0] vis_address_b;
+	wire [31:0] vis_data_a;
+	wire [31:0] vis_data_b;
+	wire vis_wren_a;
+	wire vis_wren_b;
+	wire [31:0] vis_q_a;
+	wire [31:0] vis_q_b;
+	
 alu_top alu_top(
 	.rst(rst),
 	.clk(clk),
@@ -108,7 +142,9 @@ alu_top alu_top(
   //output wire [16] flags_from_ram,
   
 	.next_pc(next_pc),
-	.taken_pc(taken_pc)
+	.taken_pc(taken_pc),
+	
+	.flags (flags[4:0])
 );
 
 decoder decoder(
@@ -184,7 +220,23 @@ hera_regf hera_regf(
 	.rd_temp(temp_reg), // temp reg used in mult, into r13
 	.load_flags(flags_from_ram), // availibe cary zero
 	.rsa_data(rf_ra), 
-	.rsb_data(rf_rb)
+	.rsb_data(rf_rb),
+	.R1 (R1[15:0]),
+  .R2 (R2[15:0]),
+  .R3 (R3[15:0]),
+  .R4 (R4[15:0]),
+  .R5 (R5[15:0]),
+  .R6 (R6[15:0]),
+  .R7 (R7[15:0]),
+  .R8 (R8[15:0]),
+  .R9 (R9[15:0]),
+  .R0 (R0[15:0]),
+  .R10 (R10[15:0]),
+  .R11 (R11[15:0]),
+  .R12 (R12[15:0]),
+  .R13 (R13[15:0]),
+  .R14 (R14[15:0]),
+  .R15 (R15[15:0])
 );
 
 hera_rom hera_rom (
@@ -202,6 +254,59 @@ hera_ram	hera_ram_inst (
 	.wren ( ram_write ),
 	.q ( load )
 	);
+
+vis_dev vis_dev(
+  .clk_ (clk),
+  .rst(rst),
+  .q (q[15:0]),
+  .pc (pc[15:0]),
+	.R1 (R1[15:0]),
+  .R2 (R2[15:0]),
+  .R3 (R3[15:0]),
+  .R4 (R4[15:0]),
+  .R5 (R5[15:0]),
+  .R6 (R6[15:0]),
+  .R7 (R7[15:0]),
+  .R8 (R8[15:0]),
+  .R9 (R9[15:0]),
+  .R0 (R0[15:0]),
+  .R10 (R10[15:0]),
+  .R11 (R11[15:0]),
+  .R12 (R12[15:0]),
+  .R13 (R13[15:0]),
+  .R14 (R14[15:0]),
+  .R15 (R15[15:0]),
+  .flags (flags[4:0]),
+  .tx (tx),
+  .dtr (dtr),
+  .dsr (dsr),
+  .cd (cd),
+  .cts (cts),
+  .rts (rts),
+	.address_a (vis_address_a[5:0]),
+	.address_b (vis_address_b[5:0]),
+	.data_a (vis_data_a[31:0]),
+	.data_b (vis_data_b[31:0]),
+	.wren_a (vis_wren_a),
+	.wren_b (vis_wren_b),
+	.q_a (vis_q_a[31:0]),
+	.q_b (vis_q_b[31:0]),
+	.rsa (rsa[3:0]),
+	.rsb (rsb[3:0]),
+	.rsd (rd[3:0])
+);
+
+vis_ram vis_ram (
+	.address_a (vis_address_a[5:0]),
+	.address_b (vis_address_b[5:0]),
+	.clock (clk),
+	.data_a (vis_data_a[31:0]),
+	.data_b (vis_data_b[31:0]),
+	.wren_a (vis_wren_a),
+	.wren_b (vis_wren_b),
+	.q_a (vis_q_a[31:0]),
+	.q_b (vis_q_b[31:0])
+);
 	
 assign out_test = ram_write;
 	

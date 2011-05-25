@@ -17,25 +17,24 @@ module hera_regf(
   input [15:0] rd_temp, // temp reg used in mult, into r13
   output [2:0]  load_flags, // availibe cary zero
   output [15:0] rsa_data,
-  output [15:0] rsb_data
+  output [15:0] rsb_data,
+  output  reg [15:0] R0,
+  output  reg [15:0] R1,
+  output  reg [15:0] R2,
+  output  reg [15:0] R3,
+  output  reg [15:0] R4,
+  output  reg [15:0] R5,
+  output  reg [15:0] R6,
+  output  reg [15:0] R7,
+  output  reg [15:0] R8,
+  output  reg [15:0] R9,
+  output  reg [15:0] R10,
+  output  reg [15:0] R11,
+  output  reg [15:0] R12,
+  output  reg [15:0] R13,
+  output  reg [15:0] R14,
+  output  reg [15:0] R15
 );
-
-  reg [15:0] R0;
-  reg [15:0] R1;
-  reg [15:0] R2;
-  reg [15:0] R3;
-  reg [15:0] R4;
-  reg [15:0] R5;
-  reg [15:0] R6;
-  reg [15:0] R7;
-  reg [15:0] R8;
-  reg [15:0] R9;
-  reg [15:0] R10;
-  reg [15:0] R11;
-  reg [15:0] R12;
-  reg [15:0] R13;
-  reg [15:0] R14;
-  reg [15:0] R15;
 
   parameter
     r0 = 4'b0000,
