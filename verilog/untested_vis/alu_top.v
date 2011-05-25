@@ -75,7 +75,9 @@ module alu_top
   // To PC
   //
   output [15:0] next_pc,
-  output taken_pc
+  output taken_pc,
+  
+  output wire [4:0] flags
 );
 
   `include "opcode_alu.v"
@@ -111,6 +113,8 @@ module alu_top
   reg [15:0] swi_add15 = 16'b0000_0011_1111_0000;
   wire [15:0] swi_add;
   reg [7:0] swi_stack_size = 8'b0000_1111;
+
+  assign flags = {carry_block, carry, overflow, zero, sign};
 
   assign swi_add = (op_swi_val)?
                       ((v_data[3:0] == 4'b0000)? swi_add0:
@@ -370,4 +374,3 @@ module alu_top
                    16'b0;
 
 endmodule
-

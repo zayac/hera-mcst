@@ -17,6 +17,7 @@ parameter halfperiod = 5;
 parameter period = 10;
 parameter twocycle = 20;
 parameter delay = 100;
+parameter second_twocycle = 350000;
 
 integer errors, cycles;
 
@@ -50,6 +51,10 @@ task set_reset;
 	begin
 		rst = 1;
 		#twocycle;
+		rst = 0;
+		#twocycle;
+		rst = 1;
+		#second_twocycle;
 		rst = 0;
 		#twocycle;
 		rst = 1;
