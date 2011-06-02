@@ -71,7 +71,7 @@ reg [15:0] R[WHOLE_NUMBER_OF_16BIT_DATA:0]; // array of registers
 reg [15:0] D[NUMBER_OF_16BWORDS_INFO_OF_1COMMAND - 1:0]; // data of 1 command from buffer to be displayed
 reg [7:0] digit; // hexical digit - 4 bits. each register is divided into 4 digits
 reg mode; // conventor mode. description is with "module convent" one
-wire [0:7] char; // transmitted data
+wire [7:0] char; // transmitted data
 reg  [3:0] tx_count; //number of transmited bits
 reg eot_f;
 reg [5:0] d_index; // number of command 
@@ -546,7 +546,7 @@ always @ ( posedge clk)//char_num)
 convent convent(
 .digit (digit[7:0]),
 .mode (mode), // mode is described with description of convert below.
-.out (char[0:7]), //inverted order due to the order of transmitting bits lower
+.out (char[7:0]), //inverted order due to the order of transmitting bits lower -- strange, but it is unnecessary here, so normal order is left.
 .clock (clk_)
 ); 
 
